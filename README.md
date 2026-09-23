@@ -194,3 +194,6 @@ docker-compose.yml      تشغيل db + backend + frontend-react معًا بأم
 
 ---
 **آخر تحديث:** تسليم أولي كامل يغطي جميع المتطلبات المذكورة في طلب المواصفات التنفيذية.
+## Project URL
+
+https://github.com/osamaobeid80-tech/real-estate-management-system
