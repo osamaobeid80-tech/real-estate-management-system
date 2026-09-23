@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>العقارات | نظام إدارة العقارات</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f4c5c">
+<link rel="apple-touch-icon" href="images/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebarContainer"></div>
+  <main class="app-main">
+    <div id="topbarContainer"></div>
+
+    <div class="app-content">
+      <div class="security-banner" style="background:var(--primary-light);border-color:#bcdfe6;color:var(--primary-dark);">
+        <i class="fa-solid fa-circle-info"></i>
+        <div>هذه شاشة إدارة <b>العقارات (المباني/الأصول)</b> بشكل مستقل عن الوحدات والعقود — كل عقار قد يحتوي على عدة وحدات، وكل وحدة قد يكون لها عقد إيجار مستقل. راجع <a href="units.html" style="color:inherit;text-decoration:underline;">الوحدات</a> و<a href="contracts.html" style="color:inherit;text-decoration:underline;">العقود</a>.</div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="بحث باسم العقار، المالك، المدينة...">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <select class="filter-select" id="typeFilter">
+          <option value="">كل الأنواع</option>
+          <option value="سكني">سكني</option>
+          <option value="تجاري">تجاري</option>
+          <option value="مختلط">مختلط</option>
+          <option value="أرض">أرض</option>
+        </select>
+        <button class="btn btn-primary" id="addPropertyBtn"><i class="fa-solid fa-plus"></i> إضافة عقار</button>
+      </div>
+
+      <div class="panel" style="padding:0;overflow:hidden;">
+        <div class="table-wrap desktop-only">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>اسم العقار</th><th>النوع</th><th>المدينة</th><th>العنوان</th>
+                <th>المالك</th><th>جوال المالك</th><th>عدد الوحدات</th><th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="propsTableBody">
+              <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--gray-600);">جارِ التحميل...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="mobile-cards-only" id="propsCardsWrap" style="padding:14px;"></div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="bottomNavContainer"></div>
+
+<!-- مودال إضافة/تعديل عقار -->
+<div class="modal-overlay" id="propertyModal">
+  <div class="modal-box" style="max-width:520px;">
+    <div class="modal-header">
+      <h3 id="propertyModalTitle">إضافة عقار جديد</h3>
+      <button class="modal-close" onclick="closeModal('propertyModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="propertyForm">
+        <input type="hidden" id="propertyId">
+        <div class="form-row">
+          <div class="form-group"><label>اسم العقار / المبنى *</label><input required class="form-control" id="f_property_name"></div>
+          <div class="form-group"><label>نوع العقار</label>
+            <select class="form-control" id="f_property_type">
+              <option>سكني</option><option>تجاري</option><option>مختلط</option><option>أرض</option>
+            </select>
+          </div>
+          <div class="form-group"><label>المدينة</label><input class="form-control" id="f_city"></div>
+          <div class="form-group"><label>العنوان التفصيلي</label><input class="form-control" id="f_address"></div>
+          <div class="form-group"><label>اسم المالك</label><input class="form-control" id="f_owner_name"></div>
+          <div class="form-group"><label>جوال المالك</label><input class="form-control" id="f_owner_phone" placeholder="05xxxxxxxx"></div>
+        </div>
+        <div class="form-group"><label>ملاحظات عامة</label><textarea class="form-control" id="f_notes" rows="2"></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('propertyModal')">إلغاء</button>
+      <button class="btn btn-primary" id="savePropertyBtn"><i class="fa-solid fa-floppy-disk"></i> حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/data.js"></script>
+<script>
+renderShell('properties');
+
+let allProperties = [];
+let allUnitsForCount = [];
+
+async function loadProperties(){
+  try{
+    [allProperties, allUnitsForCount] = await Promise.all([
+      API.listAll('properties'),
+      API.listAll('units')
+    ]);
+    applyFilters();
+  }catch(e){
+    showToast('فشل تحميل العقارات', 'error');
+    console.error(e);
+  }
+}
+
+function unitsCountFor(propertyId){
+  return allUnitsForCount.filter(u => u.property_id === propertyId).length;
+}
+
+function applyFilters(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const type = document.getElementById('typeFilter').value;
+  let filtered = allProperties.filter(p => {
+    if(type && p.property_type !== type) return false;
+    if(q){
+      const hay = [p.property_name, p.owner_name, p.city, p.address].join(' ').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  renderTable(filtered);
+  renderCards(filtered);
+}
+
+function renderTable(list){
+  const body = document.getElementById('propsTableBody');
+  if(list.length === 0){
+    body.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-inbox"></i>لا توجد نتائج مطابقة</div></td></tr>`;
+    return;
+  }
+  body.innerHTML = list.map(p => `
+    <tr>
+      <td><b>${escapeHtml(p.property_name)}</b></td>
+      <td><span class="status-badge s-mah">${escapeHtml(p.property_type||'—')}</span></td>
+      <td>${escapeHtml(p.city || '—')}</td>
+      <td>${escapeHtml(p.address || '—')}</td>
+      <td>${escapeHtml(p.owner_name || '—')}</td>
+      <td>${escapeHtml(p.owner_phone || '—')}</td>
+      <td><a href="units.html?property=${p.id}" style="color:var(--primary);font-weight:700;text-decoration:none;">${unitsCountFor(p.id)} وحدة</a></td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-outline btn-icon" title="تعديل" onclick="editProperty('${p.id}')" ${canEdit()?'':'disabled'}><i class="fa-solid fa-pen"></i></button>
+          <button class="btn btn-danger btn-icon" title="حذف" onclick="deleteProperty('${p.id}')" ${canDelete()?'':'disabled'}><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderCards(list){
+  const wrap = document.getElementById('propsCardsWrap');
+  if(list.length === 0){
+    wrap.innerHTML = `<div class="empty-state"><i class="fa-solid fa-inbox"></i>لا توجد نتائج مطابقة</div>`;
+    return;
+  }
+  wrap.innerHTML = list.map(p => `
+    <div class="unit-card">
+      <div class="uc-head">
+        <div>
+          <div class="uc-title">${escapeHtml(p.property_name)}</div>
+          <div class="uc-sub">${escapeHtml(p.city||'')} · ${escapeHtml(p.address||'')}</div>
+        </div>
+        <span class="status-badge s-mah">${escapeHtml(p.property_type||'—')}</span>
+      </div>
+      <div class="uc-row"><span>المالك</span><span>${escapeHtml(p.owner_name || '—')}</span></div>
+      <div class="uc-row"><span>جوال المالك</span><span>${escapeHtml(p.owner_phone || '—')}</span></div>
+      <div class="uc-row"><span>عدد الوحدات</span><span>${unitsCountFor(p.id)}</span></div>
+      <div class="uc-actions">
+        <a href="units.html?property=${p.id}" class="btn btn-outline btn-sm" style="flex:1;"><i class="fa-solid fa-building"></i> عرض الوحدات</a>
+        <button class="btn btn-outline btn-sm btn-icon" onclick="editProperty('${p.id}')" ${canEdit()?'':'disabled'}><i class="fa-solid fa-pen"></i></button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteProperty('${p.id}')" ${canDelete()?'':'disabled'}><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('typeFilter').addEventListener('change', applyFilters);
+
+document.getElementById('addPropertyBtn').addEventListener('click', () => {
+  if(!canEdit()){ showToast('لا تملك صلاحية الإضافة (دور عرض فقط)', 'error'); return; }
+  document.getElementById('propertyForm').reset();
+  document.getElementById('propertyId').value = '';
+  document.getElementById('propertyModalTitle').textContent = 'إضافة عقار جديد';
+  openModal('propertyModal');
+});
+
+window.editProperty = function(id){
+  if(!canEdit()){ showToast('لا تملك صلاحية التعديل (دور عرض فقط)', 'error'); return; }
+  const p = allProperties.find(x=>x.id===id);
+  if(!p) return;
+  document.getElementById('propertyId').value = p.id;
+  document.getElementById('f_property_name').value = p.property_name || '';
+  document.getElementById('f_property_type').value = p.property_type || 'سكني';
+  document.getElementById('f_city').value = p.city || '';
+  document.getElementById('f_address').value = p.address || '';
+  document.getElementById('f_owner_name').value = p.owner_name || '';
+  document.getElementById('f_owner_phone').value = p.owner_phone || '';
+  document.getElementById('f_notes').value = p.notes || '';
+  document.getElementById('propertyModalTitle').textContent = 'تعديل بيانات العقار';
+  openModal('propertyModal');
+};
+
+document.getElementById('savePropertyBtn').addEventListener('click', async () => {
+  if(!document.getElementById('f_property_name').value.trim()){
+    showToast('اسم العقار مطلوب', 'error'); return;
+  }
+  const payload = {
+    property_name: document.getElementById('f_property_name').value.trim(),
+    property_type: document.getElementById('f_property_type').value,
+    city: document.getElementById('f_city').value.trim(),
+    address: document.getElementById('f_address').value.trim(),
+    owner_name: document.getElementById('f_owner_name').value.trim(),
+    owner_phone: document.getElementById('f_owner_phone').value.trim(),
+    notes: document.getElementById('f_notes').value.trim(),
+  };
+  const id = document.getElementById('propertyId').value;
+  try{
+    if(id){
+      await API.update('properties', id, payload);
+      showToast('تم تحديث العقار بنجاح', 'success');
+    }else{
+      await API.create('properties', payload);
+      showToast('تمت إضافة العقار بنجاح', 'success');
+    }
+    closeModal('propertyModal');
+    loadProperties();
+  }catch(e){
+    showToast('حدث خطأ أثناء الحفظ', 'error');
+    console.error(e);
+  }
+});
+
+window.deleteProperty = async function(id){
+  if(!canDelete()){ showToast('الحذف متاح لمسؤول النظام فقط', 'error'); return; }
+  if(unitsCountFor(id) > 0){
+    if(!confirm('يحتوي هذا العقار على وحدات مرتبطة به. حذفه لن يحذف الوحدات لكنها ستفقد ربطها بالعقار. هل تريد المتابعة؟')) return;
+  } else if(!confirm('هل أنت متأكد من حذف هذا العقار؟')) return;
+  try{
+    await API.remove('properties', id);
+    showToast('تم حذف العقار', 'success');
+    loadProperties();
+  }catch(e){
+    showToast('فشل حذف العقار', 'error');
+  }
+};
+
+loadProperties();
+</script>
+</body>
+</html>

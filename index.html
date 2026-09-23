@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم | نظام إدارة العقارات</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f4c5c">
+<link rel="apple-touch-icon" href="images/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebarContainer"></div>
+  <main class="app-main">
+    <div id="topbarContainer"></div>
+
+    <div class="app-content">
+      <!-- تنبيهات الاستحقاقات القريبة -->
+      <div id="alertsArea"></div>
+
+      <!-- بطاقات الإحصائيات -->
+      <div class="stat-grid" id="statGrid">
+        <div class="stat-card blue"><div class="icon-box"><i class="fa-solid fa-building"></i></div><div><div class="num" id="statTotalUnits">—</div><div class="lbl">إجمالي الوحدات</div></div></div>
+        <div class="stat-card green"><div class="icon-box"><i class="fa-solid fa-key"></i></div><div><div class="num" id="statOccupied">—</div><div class="lbl">وحدات مؤجرة</div></div></div>
+        <div class="stat-card amber"><div class="icon-box"><i class="fa-solid fa-door-open"></i></div><div><div class="num" id="statVacant">—</div><div class="lbl">وحدات شاغرة</div></div></div>
+        <div class="stat-card red"><div class="icon-box"><i class="fa-solid fa-triangle-exclamation"></i></div><div><div class="num" id="statOverdue">—</div><div class="lbl">دفعات متأخرة</div></div></div>
+      </div>
+
+      <div class="form-row" style="align-items:stretch;">
+        <div class="panel" style="grid-column:span 2;">
+          <div class="panel-title"><h3><i class="fa-solid fa-chart-line"></i> إيرادات الدفعات المسددة (آخر 6 أشهر تقريبيًا)</h3></div>
+          <div style="height:280px;"><canvas id="revenueChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title"><h3><i class="fa-solid fa-chart-pie"></i> توزيع حالة الوحدات</h3></div>
+          <div style="height:280px;"><canvas id="statusChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title"><h3><i class="fa-solid fa-calendar-day"></i> الدفعات المستحقة قريبًا (30 يومًا)</h3>
+          <a href="payments.html" class="btn btn-outline btn-sm">عرض كل المدفوعات <i class="fa-solid fa-arrow-left"></i></a>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>المستأجر</th><th>رقم العقد</th><th>القيمة</th><th>تاريخ الاستحقاق</th><th>الحالة</th><th></th></tr></thead>
+            <tbody id="upcomingTableBody"><tr><td colspan="6" style="text-align:center;color:var(--gray-600);">جارِ التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="bottomNavContainer"></div>
+
+<script src="js/app.js"></script>
+<script src="js/data.js"></script>
+<script>
+renderShell('dashboard');
+
+let unitsCache = [];
+let paymentsCache = [];
+
+async function loadDashboard(){
+  try{
+    [unitsCache, paymentsCache] = await Promise.all([
+      API.listAll('units'),
+      API.listAll('payments')
+    ]);
+    renderStats();
+    renderAlerts();
+    renderCharts();
+    renderUpcoming();
+  }catch(e){
+    showToast('حدث خطأ في تحميل بيانات لوحة التحكم', 'error');
+    console.error(e);
+  }
+}
+
+function renderStats(){
+  const total = unitsCache.length;
+  const occupied = unitsCache.filter(u=>u.unit_status==='مؤجرة').length;
+  const vacant = unitsCache.filter(u=>u.unit_status==='شاغرة').length;
+  const overdue = paymentsCache.filter(p=>p.status==='متأخرة' || (p.status==='مستحقة' && daysUntil(p.due_date)!==null && daysUntil(p.due_date) < 0)).length;
+  document.getElementById('statTotalUnits').textContent = total;
+  document.getElementById('statOccupied').textContent = occupied;
+  document.getElementById('statVacant').textContent = vacant;
+  document.getElementById('statOverdue').textContent = overdue;
+}
+
+function renderAlerts(){
+  const area = document.getElementById('alertsArea');
+  const overdueCount = paymentsCache.filter(p=>p.status==='متأخرة').length;
+  if(overdueCount > 0){
+    area.innerHTML = `<div class="security-banner" style="background:var(--danger-light);border-color:#f6c2c2;color:#8f2323;">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <div>يوجد <b>${overdueCount}</b> دفعة متأخرة السداد تحتاج متابعة عاجلة مع المستأجرين. <a href="payments.html" style="color:inherit;text-decoration:underline;">عرض التفاصيل</a></div>
+    </div>`;
+  } else {
+    area.innerHTML = '';
+  }
+}
+
+function renderCharts(){
+  // حالة الوحدات
+  const statuses = ['مؤجرة','شاغرة','تحت الصيانة','محجوزة'];
+  const counts = statuses.map(s => unitsCache.filter(u=>u.unit_status===s).length);
+  new Chart(document.getElementById('statusChart'), {
+    type:'doughnut',
+    data:{
+      labels: statuses,
+      datasets:[{ data: counts, backgroundColor:['#1f9d55','#94a3b8','#e0a11c','#0f4c5c'] }]
+    },
+    options:{ plugins:{ legend:{ position:'bottom', labels:{font:{family:'Cairo'}} } }, maintainAspectRatio:false }
+  });
+
+  // إيرادات مقدّرة من الدفعات المدفوعة مجمّعة بالشهر (تقريبي بناء على paid_date)
+  const paidPayments = paymentsCache.filter(p=>p.status==='مدفوعة' && p.paid_date);
+  const monthTotals = {};
+  paidPayments.forEach(p=>{
+    const d = new Date(p.paid_date);
+    if(isNaN(d.getTime())) return;
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    monthTotals[key] = (monthTotals[key]||0) + Number(p.amount||0);
+  });
+  const sortedKeys = Object.keys(monthTotals).sort();
+  new Chart(document.getElementById('revenueChart'), {
+    type:'bar',
+    data:{
+      labels: sortedKeys.length ? sortedKeys : ['لا توجد بيانات كافية'],
+      datasets:[{ label:'الإيرادات المسددة (ريال)', data: sortedKeys.length ? sortedKeys.map(k=>monthTotals[k]) : [0], backgroundColor:'#0f4c5c', borderRadius:6 }]
+    },
+    options:{ plugins:{legend:{display:false}}, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true } } }
+  });
+}
+
+function renderUpcoming(){
+  const body = document.getElementById('upcomingTableBody');
+  const upcoming = paymentsCache
+    .filter(p => p.status==='مستحقة' || p.status==='متأخرة')
+    .map(p => ({ ...p, _days: daysUntil(p.due_date) }))
+    .filter(p => p._days !== null && p._days <= 30)
+    .sort((a,b)=> a._days - b._days)
+    .slice(0, 8);
+
+  if(upcoming.length === 0){
+    body.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-circle-check"></i>لا توجد دفعات مستحقة خلال 30 يومًا القادمة</div></td></tr>`;
+    return;
+  }
+
+  body.innerHTML = upcoming.map(p => `
+    <tr>
+      <td>${escapeHtml(p.tenant_name || '—')}</td>
+      <td>${escapeHtml(p.contract_number || '—')}</td>
+      <td>${formatCurrency(p.amount)}</td>
+      <td>${formatDate(p.due_date)} ${p._days < 0 ? `<span style="color:var(--danger);font-size:11px;">(متأخرة ${Math.abs(p._days)} يوم)</span>` : `<span style="color:var(--gray-600);font-size:11px;">(بعد ${p._days} يوم)</span>`}</td>
+      <td><span class="status-badge ${paymentStatusBadgeClass(p._days<0 ? 'متأخرة' : p.status)}">${p._days<0 ? 'متأخرة' : p.status}</span></td>
+      <td><a href="unit-detail.html?id=${p.unit_id}" class="btn btn-outline btn-sm">عرض الوحدة</a></td>
+    </tr>
+  `).join('');
+}
+
+loadDashboard();
+</script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدارة المدفوعات | نظام إدارة العقارات</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f4c5c">
+<link rel="apple-touch-icon" href="images/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebarContainer"></div>
+  <main class="app-main">
+    <div id="topbarContainer"></div>
+
+    <div class="app-content">
+      <div class="stat-grid">
+        <div class="stat-card green"><div class="icon-box"><i class="fa-solid fa-circle-check"></i></div><div><div class="num" id="statPaid">—</div><div class="lbl">دفعات مسددة</div></div></div>
+        <div class="stat-card blue"><div class="icon-box"><i class="fa-solid fa-hourglass-half"></i></div><div><div class="num" id="statDue">—</div><div class="lbl">دفعات مستحقة</div></div></div>
+        <div class="stat-card red"><div class="icon-box"><i class="fa-solid fa-triangle-exclamation"></i></div><div><div class="num" id="statLate">—</div><div class="lbl">دفعات متأخرة</div></div></div>
+        <div class="stat-card amber"><div class="icon-box"><i class="fa-solid fa-sack-dollar"></i></div><div><div class="num" id="statTotalAmount">—</div><div class="lbl">إجمالي المسدد (ريال)</div></div></div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="بحث باسم المستأجر أو رقم العقد أو رقم السند...">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <select class="filter-select" id="statusFilter">
+          <option value="">كل الحالات</option>
+          <option value="مدفوعة">مدفوعة</option>
+          <option value="مستحقة">مستحقة</option>
+          <option value="متأخرة">متأخرة</option>
+          <option value="ملغاة">ملغاة</option>
+        </select>
+      </div>
+
+      <div class="panel" style="padding:0;overflow:hidden;">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>المستأجر</th><th>رقم العقد</th><th>#</th><th>القيمة</th><th>الاستحقاق</th><th>السداد</th><th>الحالة</th><th>طريقة السداد</th><th>إجراءات</th></tr></thead>
+            <tbody id="paymentsTableBody"><tr><td colspan="9" style="text-align:center;padding:30px;color:var(--gray-600);">جارِ التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="bottomNavContainer"></div>
+
+<script src="js/app.js"></script>
+<script src="js/data.js"></script>
+<script>
+renderShell('payments');
+
+let allPayments = [];
+
+async function loadPayments(){
+  try{
+    allPayments = await API.listAll('payments');
+    // ترقية حالة الدفعات المتجاوزة تلقائيًا لغرض العرض (بدون تعديل قاعدة البيانات)
+    allPayments.forEach(p=>{
+      if(p.status==='مستحقة'){
+        const d = daysUntil(p.due_date);
+        if(d !== null && d < 0) p._displayStatus = 'متأخرة';
+      }
+    });
+    renderStats();
+    applyFilters();
+  }catch(e){
+    showToast('فشل تحميل المدفوعات', 'error');
+    console.error(e);
+  }
+}
+
+function renderStats(){
+  const paid = allPayments.filter(p=>p.status==='مدفوعة');
+  const due = allPayments.filter(p=>(p._displayStatus||p.status)==='مستحقة');
+  const late = allPayments.filter(p=>(p._displayStatus||p.status)==='متأخرة');
+  const totalAmount = paid.reduce((s,p)=>s+Number(p.amount||0),0);
+  document.getElementById('statPaid').textContent = paid.length;
+  document.getElementById('statDue').textContent = due.length;
+  document.getElementById('statLate').textContent = late.length;
+  document.getElementById('statTotalAmount').textContent = totalAmount.toLocaleString('ar-SA');
+}
+
+function applyFilters(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  let filtered = allPayments.filter(p=>{
+    const effStatus = p._displayStatus || p.status;
+    if(status && effStatus !== status) return false;
+    if(q){
+      const hay = [p.tenant_name, p.contract_number, p.receipt_number].join(' ').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  }).sort((a,b)=> new Date(a.due_date||0) - new Date(b.due_date||0));
+  renderTable(filtered);
+}
+
+function renderTable(list){
+  const body = document.getElementById('paymentsTableBody');
+  if(list.length===0){
+    body.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-inbox"></i>لا توجد نتائج مطابقة</div></td></tr>`;
+    return;
+  }
+  body.innerHTML = list.map(p=>{
+    const effStatus = p._displayStatus || p.status;
+    return `
+    <tr>
+      <td>${escapeHtml(p.tenant_name || '—')}</td>
+      <td><a href="unit-detail.html?id=${p.unit_id}" style="color:var(--primary);text-decoration:none;font-weight:700;">${escapeHtml(p.contract_number || '—')}</a></td>
+      <td>${p.payment_number ?? '—'}</td>
+      <td>${formatCurrency(p.amount)}</td>
+      <td>${formatDate(p.due_date)}</td>
+      <td>${formatDate(p.paid_date)}</td>
+      <td><span class="status-badge ${paymentStatusBadgeClass(effStatus)}">${escapeHtml(effStatus)}</span></td>
+      <td>${escapeHtml(p.payment_method || '—')}</td>
+      <td>
+        ${p.status !== 'مدفوعة' ? `<button class="btn btn-primary btn-sm" onclick="quickMarkPaid('${p.id}','${p.unit_id}')" ${canEdit()?'':'disabled'}><i class="fa-solid fa-check"></i> تسجيل سداد</button>` : `<a href="unit-detail.html?id=${p.unit_id}" class="btn btn-outline btn-sm">عرض الوحدة</a>`}
+      </td>
+    </tr>
+  `;}).join('');
+}
+
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('statusFilter').addEventListener('change', applyFilters);
+
+window.quickMarkPaid = async function(paymentId, unitId){
+  if(!canEdit()){ showToast('لا تملك صلاحية تسجيل السداد', 'error'); return; }
+  const method = prompt('طريقة السداد؟ (نقدي / تحويل بنكي / شيك / بطاقة)', 'تحويل بنكي');
+  if(!method) return;
+  try{
+    await API.update('payments', paymentId, { status:'مدفوعة', paid_date: new Date().toISOString().slice(0,10), payment_method: method });
+    try{
+      const unit = await API.get('units', unitId);
+      await API.update('units', unitId, { payments_paid: (unit.payments_paid||0) + 1 });
+    }catch(e){}
+    showToast('تم تسجيل السداد بنجاح', 'success');
+    loadPayments();
+  }catch(e){
+    showToast('فشل تسجيل السداد', 'error');
+  }
+};
+
+loadPayments();
+</script>
+</body>
+</html>

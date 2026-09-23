@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تفاصيل الوحدة | نظام إدارة العقارات</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f4c5c">
+<link rel="apple-touch-icon" href="images/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebarContainer"></div>
+  <main class="app-main">
+    <div id="topbarContainer"></div>
+
+    <div class="app-content">
+      <a href="units.html" class="btn btn-outline btn-sm" style="margin-bottom:16px;"><i class="fa-solid fa-arrow-right"></i> رجوع لقائمة الوحدات</a>
+
+      <div id="unitHeaderArea"></div>
+
+      <div class="form-row" style="align-items:stretch;">
+        <div class="panel">
+          <div class="panel-title"><h3><i class="fa-solid fa-id-card"></i> بيانات العقد والمستأجر</h3>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-outline btn-sm" id="editUnitBtn"><i class="fa-solid fa-pen"></i> بيانات الوحدة</button>
+              <a href="contracts.html" class="btn btn-primary btn-sm" id="manageContractBtn"><i class="fa-solid fa-file-signature"></i> إدارة العقد</a>
+            </div>
+          </div>
+          <div id="unitInfoArea" style="font-size:13.5px; line-height:2.1;"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title"><h3><i class="fa-solid fa-chart-simple"></i> ملخص السداد</h3></div>
+          <div id="paymentSummaryArea"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title"><h3><i class="fa-solid fa-money-bill-wave"></i> جدول الدفعات</h3>
+          <button class="btn btn-primary btn-sm" id="addPaymentBtn"><i class="fa-solid fa-plus"></i> إضافة دفعة</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>#</th><th>القيمة</th><th>الاستحقاق</th><th>تاريخ السداد</th><th>الحالة</th><th>طريقة السداد</th><th>رقم السند</th><th>إجراءات</th></tr></thead>
+            <tbody id="paymentsTableBody"><tr><td colspan="8" style="text-align:center;color:var(--gray-600);">جارِ التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title"><h3><i class="fa-solid fa-note-sticky"></i> الملاحظات والتنبيهات</h3>
+          <button class="btn btn-accent btn-sm" id="addNoteBtn"><i class="fa-solid fa-plus"></i> إضافة ملاحظة</button>
+        </div>
+        <div id="notesArea"></div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="bottomNavContainer"></div>
+
+<!-- مودال إضافة دفعة -->
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-header"><h3>إضافة دفعة جديدة</h3><button class="modal-close" onclick="closeModal('paymentModal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>رقم الدفعة</label><input type="number" class="form-control" id="p_number"></div>
+      <div class="form-group"><label>القيمة (ريال)</label><input type="number" class="form-control" id="p_amount"></div>
+      <div class="form-group"><label>تاريخ الاستحقاق</label><input type="date" class="form-control" id="p_due_date"></div>
+      <div class="form-group"><label>الحالة</label>
+        <select class="form-control" id="p_status"><option>مستحقة</option><option>مدفوعة</option><option>متأخرة</option><option>ملغاة</option></select>
+      </div>
+      <div class="form-group" id="p_paiddate_group" style="display:none;"><label>تاريخ السداد</label><input type="date" class="form-control" id="p_paid_date"></div>
+      <div class="form-group" id="p_method_group" style="display:none;"><label>طريقة السداد</label>
+        <select class="form-control" id="p_method"><option>نقدي</option><option>تحويل بنكي</option><option>شيك</option><option>بطاقة</option></select>
+      </div>
+      <div class="form-group"><label>رقم السند</label><input class="form-control" id="p_receipt"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('paymentModal')">إلغاء</button>
+      <button class="btn btn-primary" id="savePaymentBtn"><i class="fa-solid fa-floppy-disk"></i> حفظ الدفعة</button>
+    </div>
+  </div>
+</div>
+
+<!-- مودال إضافة ملاحظة -->
+<div class="modal-overlay" id="noteModal">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-header"><h3>إضافة ملاحظة</h3><button class="modal-close" onclick="closeModal('noteModal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>نوع الملاحظة</label>
+        <select class="form-control" id="n_type"><option>عام</option><option>صيانة</option><option>شكوى</option><option>تنبيه استحقاق</option><option>تجديد عقد</option></select>
+      </div>
+      <div class="form-group"><label>نص الملاحظة</label><textarea class="form-control" id="n_text" rows="4"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('noteModal')">إلغاء</button>
+      <button class="btn btn-accent" id="saveNoteBtn"><i class="fa-solid fa-floppy-disk"></i> حفظ الملاحظة</button>
+    </div>
+  </div>
+</div>
+
+<!-- مودال تعديل الوحدة (مبسط) -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <div class="modal-header"><h3>تعديل بيانات الوحدة</h3><button class="modal-close" onclick="closeModal('editModal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>رقم الوحدة</label><input class="form-control" id="e_unit_number"></div>
+        <div class="form-group"><label>الطابق</label><input class="form-control" id="e_floor"></div>
+        <div class="form-group"><label>المساحة (م²)</label><input type="number" class="form-control" id="e_area_sqm"></div>
+        <div class="form-group"><label>حالة الوحدة</label>
+          <select class="form-control" id="e_unit_status"><option>مؤجرة</option><option>شاغرة</option><option>تحت الصيانة</option><option>محجوزة</option></select>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:6px;">لتعديل بيانات المستأجر أو الإيجار استخدم زر "إدارة العقد" أعلى الصفحة.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('editModal')">إلغاء</button>
+      <button class="btn btn-primary" id="saveEditBtn">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/data.js"></script>
+<script>
+renderShell('units');
+
+const params = new URLSearchParams(window.location.search);
+const unitId = params.get('id');
+let currentUnit = null;
+let currentProperty = null;
+let currentContract = null;
+let currentPayments = [];
+let currentNotes = [];
+
+if(!unitId){
+  window.location.href = 'units.html';
+}
+
+async function loadAll(){
+  try{
+    const [unit, contracts, payments, notes] = await Promise.all([
+      API.get('units', unitId),
+      API.listAll('contracts').then(list => list.filter(c=>c.unit_id===unitId)),
+      API.list('payments', { search: unitId, limit: 100 }).then(r=>r.data.filter(p=>p.unit_id===unitId)),
+      API.list('unit_notes', { search: unitId, limit: 100 }).then(r=>r.data.filter(n=>n.unit_id===unitId))
+    ]);
+    currentUnit = unit;
+    currentContract = contracts.find(c=>c.contract_status==='نشط' || !c.contract_status) || contracts[0] || null;
+    currentProperty = currentUnit.property_id ? await API.get('properties', currentUnit.property_id).catch(()=>null) : null;
+    currentPayments = payments.sort((a,b)=> (a.payment_number||0)-(b.payment_number||0));
+    currentNotes = notes.sort((a,b)=> new Date(b.note_date||0) - new Date(a.note_date||0));
+    renderHeader();
+    renderInfo();
+    renderPaymentSummary();
+    renderPaymentsTable();
+    renderNotes();
+  }catch(e){
+    showToast('تعذّر تحميل تفاصيل الوحدة', 'error');
+    console.error(e);
+  }
+}
+
+function renderHeader(){
+  const u = currentUnit;
+  document.getElementById('unitHeaderArea').innerHTML = `
+    <div class="panel" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div>
+        <h2 style="margin:0;font-size:20px;color:var(--primary-dark);">${escapeHtml(u.unit_number)} <span style="font-size:13px;color:var(--gray-600);font-weight:400;">${escapeHtml(currentProperty ? currentProperty.property_name : '')}</span></h2>
+        <div style="margin-top:6px;color:var(--gray-600);font-size:13px;">${escapeHtml(u.unit_type||'')} · ${escapeHtml(u.floor?('الطابق '+u.floor):'')} · ${u.area_sqm?u.area_sqm+' م²':''}</div>
+      </div>
+      <span class="status-badge dot ${unitStatusBadgeClass(u.unit_status)}" style="font-size:13px;padding:8px 16px;">${escapeHtml(u.unit_status)}</span>
+    </div>
+  `;
+}
+
+function renderInfo(){
+  const c = currentContract;
+  if(!c){
+    document.getElementById('unitInfoArea').innerHTML = `
+      <div class="empty-state" style="padding:20px 0;">
+        <i class="fa-solid fa-file-circle-xmark"></i>
+        لا يوجد عقد إيجار مرتبط بهذه الوحدة حاليًا.
+        <div style="margin-top:10px;"><a href="contracts.html" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i> إنشاء عقد جديد</a></div>
+      </div>`;
+    return;
+  }
+  document.getElementById('unitInfoArea').innerHTML = `
+    <div style="display:flex;justify-content:space-between;border-bottom:1px dashed var(--gray-200);padding:6px 0;"><span style="color:var(--gray-600);">رقم العقد</span><b>${escapeHtml(c.contract_number || '—')}</b></div>
+    <div style="display:flex;justify-content:space-between;border-bottom:1px dashed var(--gray-200);padding:6px 0;"><span style="color:var(--gray-600);">حالة العقد</span><span class="status-badge dot ${contractStatusBadgeClass(c.contract_status)}">${escapeHtml(c.contract_status||'نشط')}</span></div>
+    <div style="display:flex;justify-content:space-between;border-bottom:1px dashed var(--gray-200);padding:6px 0;"><span style="color:var(--gray-600);">اسم المستأجر</span><b>${escapeHtml(c.tenant_name || '—')}</b></div>
+    <div style="display:flex;justify-content:space-between;border-bottom:1px dashed var(--gray-200);padding:6px 0;"><span style="color:var(--gray-600);">جوال المستأجر</span><b>${escapeHtml(c.tenant_phone || '—')}</b></div>
+    <div style="display:flex;justify-content:space-between;border-bottom:1px dashed var(--gray-200);padding:6px 0;"><span style="color:var(--gray-600);">رقم الهوية/السجل</span><b>${escapeHtml(c.tenant_id_number || '—')}</b></div>
+    <div style="display:flex;justify-content:space-between;border-bottom:1px dashed var(--gray-200);padding:6px 0;"><span style="color:var(--gray-600);">قيمة الإيجار السنوية</span><b>${formatCurrency(c.rent_value)}</b></div>
+    <div style="display:flex;justify-content:space-between;border-bottom:1px dashed var(--gray-200);padding:6px 0;"><span style="color:var(--gray-600);">الدفعة الدورية</span><b>${formatCurrency(c.payment_installment)} / ${escapeHtml(c.payment_frequency||'')}</b></div>
+    <div style="display:flex;justify-content:space-between;border-bottom:1px dashed var(--gray-200);padding:6px 0;"><span style="color:var(--gray-600);">بداية العقد</span><b>${formatDate(c.contract_start_date)}</b></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;"><span style="color:var(--gray-600);">نهاية العقد</span><b>${formatDate(c.contract_end_date)}</b></div>
+    ${c.notes ? `<div style="margin-top:10px;background:var(--gray-50);border-radius:10px;padding:10px 14px;font-size:12.5px;color:var(--gray-600);"><i class="fa-solid fa-quote-right"></i> ${escapeHtml(c.notes)}</div>` : ''}
+  `;
+}
+
+function renderPaymentSummary(){
+  const total = (currentContract && currentContract.payments_count) || currentPayments.length || 0;
+  const paid = currentPayments.filter(p=>p.status==='مدفوعة').length;
+  const pct = total ? Math.round((paid/total)*100) : 0;
+  const totalPaidAmount = currentPayments.filter(p=>p.status==='مدفوعة').reduce((s,p)=>s+Number(p.amount||0),0);
+  const remainingAmount = currentPayments.filter(p=>p.status!=='مدفوعة' && p.status!=='ملغاة').reduce((s,p)=>s+Number(p.amount||0),0);
+
+  document.getElementById('paymentSummaryArea').innerHTML = `
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:32px;font-weight:800;color:var(--primary);">${pct}%</div>
+      <div style="font-size:12px;color:var(--gray-600);">نسبة الدفعات المسددة (${paid}/${total})</div>
+      <div style="background:var(--gray-100);height:8px;border-radius:6px;margin-top:10px;overflow:hidden;">
+        <div style="background:var(--success);height:100%;width:${pct}%;"></div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;border-top:1px dashed var(--gray-200);padding:8px 0;"><span style="color:var(--gray-600);font-size:13px;">إجمالي المسدد</span><b style="color:var(--success);">${formatCurrency(totalPaidAmount)}</b></div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;"><span style="color:var(--gray-600);font-size:13px;">المتبقي (تقديري)</span><b style="color:var(--warn);">${formatCurrency(remainingAmount)}</b></div>
+  `;
+}
+
+function renderPaymentsTable(){
+  const body = document.getElementById('paymentsTableBody');
+  if(currentPayments.length === 0){
+    body.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-inbox"></i>لا توجد دفعات مسجّلة لهذه الوحدة</div></td></tr>`;
+    return;
+  }
+  body.innerHTML = currentPayments.map(p => `
+    <tr>
+      <td>${p.payment_number ?? '—'}</td>
+      <td>${formatCurrency(p.amount)}</td>
+      <td>${formatDate(p.due_date)}</td>
+      <td>${formatDate(p.paid_date)}</td>
+      <td><span class="status-badge ${paymentStatusBadgeClass(p.status)}">${escapeHtml(p.status)}</span></td>
+      <td>${escapeHtml(p.payment_method || '—')}</td>
+      <td>${escapeHtml(p.receipt_number || '—')}</td>
+      <td>
+        ${p.status !== 'مدفوعة' ? `<button class="btn btn-primary btn-sm" onclick="markPaid('${p.id}')" ${canEdit()?'':'disabled'}><i class="fa-solid fa-check"></i> تسجيل سداد</button>` : `<span style="color:var(--success);font-size:12px;"><i class="fa-solid fa-circle-check"></i> مكتملة</span>`}
+      </td>
+    </tr>
+  `).join('');
+}
+
+window.markPaid = async function(paymentId){
+  if(!canEdit()){ showToast('لا تملك صلاحية تسجيل السداد', 'error'); return; }
+  const method = prompt('طريقة السداد؟ (نقدي / تحويل بنكي / شيك / بطاقة)', 'تحويل بنكي');
+  if(!method) return;
+  try{
+    await API.update('payments', paymentId, { status:'مدفوعة', paid_date: new Date().toISOString().slice(0,10), payment_method: method });
+    // تحديث عدد الدفعات المسددة في سجل العقد
+    if(currentContract){
+      const newPaidCount = (currentContract.payments_paid || 0) + 1;
+      await API.update('contracts', currentContract.id, { payments_paid: newPaidCount });
+    }
+    showToast('تم تسجيل السداد بنجاح', 'success');
+    loadAll();
+  }catch(e){
+    showToast('فشل تسجيل السداد', 'error');
+  }
+};
+
+function renderNotes(){
+  const area = document.getElementById('notesArea');
+  if(currentNotes.length === 0){
+    area.innerHTML = `<div class="empty-state"><i class="fa-solid fa-note-sticky"></i>لا توجد ملاحظات مسجّلة</div>`;
+    return;
+  }
+  area.innerHTML = currentNotes.map(n => `
+    <div style="border-right:3px solid var(--accent);background:var(--gray-50);border-radius:10px;padding:12px 16px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gray-600);margin-bottom:6px;">
+        <span><i class="fa-solid fa-tag"></i> ${escapeHtml(n.note_type||'عام')} — ${escapeHtml(n.created_by||'')}</span>
+        <span>${formatDate(n.note_date)}</span>
+      </div>
+      <div style="font-size:13.5px;">${escapeHtml(n.note_text||'')}</div>
+    </div>
+  `).join('');
+}
+
+// ---- إضافة دفعة ----
+document.getElementById('p_status').addEventListener('change', (e)=>{
+  const isPaid = e.target.value === 'مدفوعة';
+  document.getElementById('p_paiddate_group').style.display = isPaid ? 'block':'none';
+  document.getElementById('p_method_group').style.display = isPaid ? 'block':'none';
+});
+document.getElementById('addPaymentBtn').addEventListener('click', ()=>{
+  if(!canEdit()){ showToast('لا تملك صلاحية الإضافة', 'error'); return; }
+  document.getElementById('p_number').value = currentPayments.length + 1;
+  document.getElementById('p_amount').value = (currentContract && currentContract.payment_installment) || '';
+  openModal('paymentModal');
+});
+document.getElementById('savePaymentBtn').addEventListener('click', async ()=>{
+  try{
+    await API.create('payments', {
+      unit_id: unitId,
+      contract_id: currentContract ? currentContract.id : '',
+      contract_number: currentContract ? (currentContract.contract_number || '') : '',
+      tenant_name: currentContract ? (currentContract.tenant_name || '') : '',
+      payment_number: Number(document.getElementById('p_number').value)||0,
+      amount: Number(document.getElementById('p_amount').value)||0,
+      due_date: document.getElementById('p_due_date').value || null,
+      status: document.getElementById('p_status').value,
+      paid_date: document.getElementById('p_paid_date').value || null,
+      payment_method: document.getElementById('p_method').value,
+      receipt_number: document.getElementById('p_receipt').value.trim(),
+      notes: ''
+    });
+    showToast('تمت إضافة الدفعة', 'success');
+    closeModal('paymentModal');
+    loadAll();
+  }catch(e){ showToast('فشل إضافة الدفعة', 'error'); }
+});
+
+// ---- إضافة ملاحظة ----
+document.getElementById('addNoteBtn').addEventListener('click', ()=>{
+  if(!canEdit()){ showToast('لا تملك صلاحية الإضافة', 'error'); return; }
+  document.getElementById('n_text').value = '';
+  openModal('noteModal');
+});
+document.getElementById('saveNoteBtn').addEventListener('click', async ()=>{
+  const text = document.getElementById('n_text').value.trim();
+  if(!text){ showToast('يرجى كتابة نص الملاحظة', 'error'); return; }
+  try{
+    await API.create('unit_notes', {
+      unit_id: unitId,
+      note_text: text,
+      note_type: document.getElementById('n_type').value,
+      created_by: getCurrentRole(),
+      note_date: new Date().toISOString()
+    });
+    showToast('تمت إضافة الملاحظة', 'success');
+    closeModal('noteModal');
+    loadAll();
+  }catch(e){ showToast('فشل إضافة الملاحظة', 'error'); }
+});
+
+// ---- تعديل سريع لبيانات الوحدة فقط ----
+document.getElementById('editUnitBtn').addEventListener('click', ()=>{
+  if(!canEdit()){ showToast('لا تملك صلاحية التعديل', 'error'); return; }
+  document.getElementById('e_unit_number').value = currentUnit.unit_number || '';
+  document.getElementById('e_floor').value = currentUnit.floor || '';
+  document.getElementById('e_area_sqm').value = currentUnit.area_sqm || '';
+  document.getElementById('e_unit_status').value = currentUnit.unit_status || 'شاغرة';
+  openModal('editModal');
+});
+document.getElementById('saveEditBtn').addEventListener('click', async ()=>{
+  try{
+    await API.update('units', unitId, {
+      unit_number: document.getElementById('e_unit_number').value.trim(),
+      floor: document.getElementById('e_floor').value.trim(),
+      area_sqm: Number(document.getElementById('e_area_sqm').value)||0,
+      unit_status: document.getElementById('e_unit_status').value
+    });
+    showToast('تم التحديث بنجاح', 'success');
+    closeModal('editModal');
+    loadAll();
+  }catch(e){ showToast('فشل التحديث', 'error'); }
+});
+
+if(unitId) loadAll();
+</script>
+</body>
+</html>

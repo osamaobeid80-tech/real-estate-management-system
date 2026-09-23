@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المواصفات التنفيذية | نظام إدارة العقارات</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f4c5c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/spec.css">
+</head>
+<body>
+
+<button class="mobile-menu-btn" id="menuBtn" aria-label="فتح القائمة"><i class="fa-solid fa-bars"></i></button>
+
+<aside class="spec-sidebar" id="sidebar">
+  <div class="brand">
+    <i class="fa-solid fa-building-columns"></i>
+    <div>
+      <h1>وثيقة المواصفات التنفيذية</h1>
+      <span>نظام إدارة العقارات — الإصدار 1.0</span>
+    </div>
+  </div>
+  <nav class="spec-nav">
+    <a href="#scope"><i class="fa-solid fa-diagram-project"></i> نطاق النظام والبيئة</a>
+    <a href="#data-model"><i class="fa-solid fa-database"></i> قاعدة البيانات (ERD)</a>
+    <a href="#api"><i class="fa-solid fa-plug"></i> الواجهات وواجهات API</a>
+    <a href="#stack"><i class="fa-solid fa-layer-group"></i> التقنيات المقترحة</a>
+    <a href="#security"><i class="fa-solid fa-shield-halved"></i> الأمن والامتثال</a>
+    <a href="#ux"><i class="fa-solid fa-display"></i> التجربة والواجهة</a>
+    <a href="#testdata"><i class="fa-solid fa-table-list"></i> نموذج بيانات الاختبار</a>
+    <a href="#qa"><i class="fa-solid fa-vial"></i> الاختبار والجودة</a>
+    <a href="#deploy"><i class="fa-solid fa-cloud-arrow-up"></i> النشر والصيانة</a>
+    <a href="#deliverables"><i class="fa-solid fa-box-archive"></i> مخرجات التسليم</a>
+    <div class="nav-group-title">روابط إضافية</div>
+    <a href="install-guide.html"><i class="fa-solid fa-mobile-screen-button"></i> طريقة التثبيت على الجوال</a>
+  </nav>
+  <a href="index.html" class="back-to-app"><i class="fa-solid fa-arrow-left"></i> فتح التطبيق التجريبي</a>
+</aside>
+
+<main class="spec-main">
+
+  <section class="spec-hero">
+    <span class="tag"><i class="fa-solid fa-circle-check"></i> وثيقة مواصفات تنفيذية جاهزة للتنفيذ</span>
+    <h1>نظام إدارة العقارات — مكتب عقاري صغير</h1>
+    <p>مواصفة تقنية ووظيفية شاملة لبناء تطبيق ويب Responsive (PWA) لإدارة عقود الإيجار، الوحدات العقارية، المدفوعات الدورية، الملاحظات، والتقارير — يدعم جميع أنظمة التشغيل والمتصفحات الحديثة عبر تصميم استجابي واحد.</p>
+    <div class="meta-row">
+      <div><b>PWA + Responsive</b>منهج التصميم</div>
+      <div><b>RTL عربي / EN اختياري</b>اللغات</div>
+      <div><b>10+ وحدات تجريبية</b>نموذج البيانات</div>
+      <div><b>REST API</b>طبقة الاتصال بالبيانات</div>
+      <div><b>Windows·macOS·Android·iOS</b>المنصات المستهدفة</div>
+    </div>
+  </section>
+
+  <!-- ===================== 1. نطاق النظام ===================== -->
+  <section class="section" id="scope">
+    <h2><span class="num">1</span> نطاق النظام والبيئة المستهدفة</h2>
+    <p>يُبنى النظام كتطبيق ويب واحد (Single Codebase) متوافق مع منهج <b>Responsive Design</b>، يعمل كـ <b>Progressive Web App (PWA)</b> قابل للتثبيت على سطح المكتب والجوال، بدلاً من تطوير تطبيقات منفصلة لكل نظام تشغيل — وهو الحل الأمثل لمكتب عقاري صغير من ناحية التكلفة وسرعة الصيانة.</p>
+
+    <div class="lead-note"><i class="fa-solid fa-lightbulb"></i> <b>القرار التصميمي:</b> واجهة واحدة متجاوبة (Responsive Web + PWA) تُلغي الحاجة لتطبيقات Native منفصلة على Android/iOS، مع الحفاظ على تجربة قريبة من التطبيقات الأصلية (أيقونة على الشاشة الرئيسية، عمل دون اتصال جزئي، إشعارات دفع مستقبلاً).</div>
+
+    <h3>المنصات والمتصفحات المستهدفة (مطابقة لمتطلبات الاستجابة)</h3>
+    <div class="card-grid">
+      <div class="info-card"><i class="fa-brands fa-windows"></i><h4>Windows 10/11</h4><p>عبر Chrome / Edge — تثبيت PWA من شريط العنوان.</p></div>
+      <div class="info-card"><i class="fa-brands fa-apple"></i><h4>macOS</h4><p>عبر Safari / Chrome — تجربة متجاوبة كاملة الشاشة.</p></div>
+      <div class="info-card"><i class="fa-brands fa-android"></i><h4>Android</h4><p>تثبيت PWA من Chrome ("إضافة إلى الشاشة الرئيسية").</p></div>
+      <div class="info-card"><i class="fa-brands fa-app-store-ios"></i><h4>iPhone / iPad</h4><p>عبر Safari — دعم "Add to Home Screen" وواجهة لمسية محسّنة.</p></div>
+      <div class="info-card"><i class="fa-brands fa-chrome"></i><h4>Google Chrome</h4><p>المتصفح المرجعي الأساسي للتطوير والاختبار.</p></div>
+      <div class="info-card"><i class="fa-brands fa-edge"></i><h4>Microsoft Edge</h4><p>توافق كامل (Chromium) دون تعديلات إضافية.</p></div>
+      <div class="info-card"><i class="fa-brands fa-safari"></i><h4>Safari</h4><p>اختبار خاص لـ Flexbox/Grid وسلوك input[type=date].</p></div>
+      <div class="info-card"><i class="fa-brands fa-firefox"></i><h4>Firefox</h4><p>فحص توافق CSS Grid وواجهات النماذج.</p></div>
+    </div>
+
+    <h3>نقاط الكسر الاستجابية (Breakpoints)</h3>
+    <div class="table-wrap"><table class="spec-table">
+      <thead><tr><th>الفئة</th><th>العرض (px)</th><th>التخطيط</th><th>ملاحظات</th></tr></thead>
+      <tbody>
+        <tr><td>هاتف صغير</td><td>&lt; 480</td><td>عمود واحد، قوائم بطاقات (Cards) بدل الجداول</td><td>أزرار كبيرة ≥44px لسهولة اللمس</td></tr>
+        <tr><td>هاتف كبير / تابلت عمودي</td><td>481 – 768</td><td>عمود واحد موسّع + تنقل سفلي (Bottom Nav)</td><td>Sidebar يتحول لقائمة منسدلة</td></tr>
+        <tr><td>تابلت أفقي</td><td>769 – 1024</td><td>عمودان، Sidebar مصغّر قابل للطي</td><td>جداول مضغوطة بتمرير أفقي</td></tr>
+        <tr><td>سطح مكتب</td><td>1025 – 1440</td><td>Sidebar ثابت + منطقة محتوى كاملة</td><td>جداول كاملة الأعمدة</td></tr>
+        <tr><td>شاشات كبيرة</td><td>&gt; 1440</td><td>حاوية بعرض أقصى 1600px مع حشوات جانبية</td><td>لوحات تحكم بعرض كامل مع رسوم بيانية جنبًا لجنب</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>خصائص PWA المطلوبة</h3>
+    <ul class="check-list">
+      <li>ملف <code>manifest.json</code> يحدد الاسم، الأيقونات، ألوان الواجهة، ووضع العرض (standalone).</li>
+      <li><code>service-worker.js</code> لتخزين الملفات الثابتة (Cache First) والعمل دون اتصال للقراءة الأخيرة.</li>
+      <li>دعم HTTPS إلزامي (شرط تفعيل PWA وSecurity من المتصفحات).</li>
+      <li>أيقونة تثبيت "Add to Home Screen" على iOS/Android وأيقونة في شريط عنوان Chrome/Edge على سطح المكتب.</li>
+    </ul>
+  </section>
+
+  <!-- ===================== 2. قاعدة البيانات ===================== -->
+  <section class="section" id="data-model">
+    <h2><span class="num">2</span> قواعد البيانات ونموذج البيانات (ERD)</h2>
+    <p>يتكوّن نموذج البيانات من 4 كيانات رئيسية تُغطي جميع الحقول المطلوبة (10 وحدات كحد أدنى) وتوسّعها لتدعم إدارة المدفوعات والملاحظات والمستخدمين بشكل علائقي كامل (Normalized).</p>
+
+    <div class="erd-wrap">
+      <div class="erd-grid">
+        <div class="erd-entity">
+          <div class="erd-head"><i class="fa-solid fa-key"></i> UNITS (الوحدات)</div>
+          <ul>
+            <li class="pk">id <span class="tp">PK · TEXT</span></li>
+            <li>contract_number <span class="tp">رقم العقد</span></li>
+            <li>tenant_name <span class="tp">اسم المستأجر</span></li>
+            <li>tenant_phone <span class="tp">جوال المستأجر</span></li>
+            <li>unit_number <span class="tp">رقم الوحدة</span></li>
+            <li>building_name <span class="tp">المبنى</span></li>
+            <li>unit_type <span class="tp">نوع الوحدة</span></li>
+            <li>rent_value <span class="tp">قيمة الإيجار</span></li>
+            <li>payment_installment <span class="tp">الدفعة الدورية</span></li>
+            <li>payment_frequency <span class="tp">دورية الدفع</span></li>
+            <li>due_date <span class="tp">تاريخ الاستحقاق</span></li>
+            <li>payments_count <span class="tp">عدد الدفعات</span></li>
+            <li>payments_paid <span class="tp">دفعات مسددة</span></li>
+            <li>unit_status <span class="tp">حالة الوحدة</span></li>
+          </ul>
+        </div>
+        <div class="erd-entity">
+          <div class="erd-head"><i class="fa-solid fa-money-bill-wave"></i> PAYMENTS (الدفعات)</div>
+          <ul>
+            <li class="pk">id <span class="tp">PK</span></li>
+            <li class="fk">unit_id <span class="tp">FK → units.id</span></li>
+            <li>payment_number <span class="tp">رقم الدفعة</span></li>
+            <li>amount <span class="tp">القيمة</span></li>
+            <li>due_date <span class="tp">الاستحقاق</span></li>
+            <li>paid_date <span class="tp">تاريخ السداد</span></li>
+            <li>status <span class="tp">مدفوعة/مستحقة/متأخرة</span></li>
+            <li>payment_method <span class="tp">طريقة السداد</span></li>
+            <li>receipt_number <span class="tp">رقم السند</span></li>
+          </ul>
+        </div>
+        <div class="erd-entity">
+          <div class="erd-head"><i class="fa-solid fa-note-sticky"></i> UNIT_NOTES (الملاحظات)</div>
+          <ul>
+            <li class="pk">id <span class="tp">PK</span></li>
+            <li class="fk">unit_id <span class="tp">FK → units.id</span></li>
+            <li>note_text <span class="tp">النص</span></li>
+            <li>note_type <span class="tp">النوع</span></li>
+            <li>created_by <span class="tp">الموظف</span></li>
+            <li>note_date <span class="tp">التاريخ</span></li>
+          </ul>
+        </div>
+        <div class="erd-entity">
+          <div class="erd-head"><i class="fa-solid fa-user-shield"></i> APP_USERS (المستخدمون)</div>
+          <ul>
+            <li class="pk">id <span class="tp">PK</span></li>
+            <li>full_name <span class="tp">الاسم</span></li>
+            <li>email <span class="tp">البريد</span></li>
+            <li>role <span class="tp">مسؤول/موظف/عرض</span></li>
+            <li>active <span class="tp">مفعّل؟</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="erd-relations">
+        <b>العلاقات:</b><br>
+        <code>UNITS (1) ── (∞) PAYMENTS</code> — كل وحدة/عقد له عدة دفعات دورية (One-to-Many عبر unit_id)<br>
+        <code>UNITS (1) ── (∞) UNIT_NOTES</code> — كل وحدة قد تحمل عدة ملاحظات تشغيلية (One-to-Many عبر unit_id)<br>
+        <code>APP_USERS (1) ── (∞) UNIT_NOTES.created_by</code> — كل ملاحظة مرتبطة بالموظف الذي أضافها (منطقيًا عبر الاسم/المعرف)
+      </div>
+    </div>
+
+    <h3>قاموس بيانات كيان "الوحدات" (10 حقول أساسية + حقول توسعة)</h3>
+    <div class="table-wrap"><table class="spec-table">
+      <thead><tr><th>الحقل</th><th>النوع</th><th>مطلوب</th><th>الوصف</th></tr></thead>
+      <tbody>
+        <tr><td><code>contract_number</code></td><td>TEXT</td><td>عند التأجير</td><td>رقم العقد الموقّع مع المستأجر</td></tr>
+        <tr><td><code>tenant_name</code></td><td>TEXT</td><td>عند التأجير</td><td>اسم المستأجر الكامل</td></tr>
+        <tr><td><code>tenant_phone</code></td><td>TEXT</td><td>عند التأجير</td><td>رقم جوال المستأجر (تنسيق سعودي 05xxxxxxxx)</td></tr>
+        <tr><td><code>unit_number</code></td><td>TEXT</td><td>نعم</td><td>رقم/كود الوحدة العقارية</td></tr>
+        <tr><td><code>rent_value</code></td><td>NUMBER</td><td>عند التأجير</td><td>قيمة الإيجار الإجمالية السنوية بالريال</td></tr>
+        <tr><td><code>payment_installment</code></td><td>NUMBER</td><td>عند التأجير</td><td>قيمة الدفعة الدورية (الشهرية/ربع سنوية...)</td></tr>
+        <tr><td><code>due_date</code></td><td>DATE</td><td>عند التأجير</td><td>تاريخ استحقاق الدفعة القادمة</td></tr>
+        <tr><td><code>payments_count</code></td><td>NUMBER</td><td>عند التأجير</td><td>إجمالي عدد الدفعات في العقد</td></tr>
+        <tr><td><code>payments_paid</code></td><td>NUMBER</td><td>محسوب</td><td>عدد الدفعات المسددة فعليًا (يُحدَّث تلقائيًا من جدول payments)</td></tr>
+        <tr><td><code>unit_status</code></td><td>ENUM</td><td>نعم</td><td>مؤجرة / شاغرة / تحت الصيانة / محجوزة</td></tr>
+        <tr><td><code>building_name</code>, <code>unit_type</code>, <code>floor</code>, <code>area_sqm</code>, <code>tenant_id_number</code>, <code>notes</code></td><td>متنوع</td><td>اختياري</td><td>حقول توسعة لدعم بحث وتصنيف أدق للوحدات</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ===================== 3. API ===================== -->
+  <section class="section" id="api">
+    <h2><span class="num">3</span> الواجهات وواجهات برمجة التطبيقات (API)</h2>
+    <p>تصميم RESTful قياسي (يتوافق مع RESTful Table API المستخدم في هذا النموذج التجريبي، وينطبق بنفس الشكل عند بناء Backend مستقل بأي من المجموعات التقنية المقترحة في القسم التالي).</p>
+
+    <h3>3.1 نقاط النهاية — إدارة الوحدات (Units CRUD)</h3>
+    <div class="table-wrap"><table class="spec-table">
+      <thead><tr><th>الإجراء</th><th>Method</th><th>المسار</th><th>الوصف</th></tr></thead>
+      <tbody>
+        <tr><td>قائمة الوحدات</td><td><span class="badge badge-get">GET</span></td><td><code>/tables/units?page=1&limit=20&search=&sort=due_date</code></td><td>دعم صفحات، بحث نصي، فرز</td></tr>
+        <tr><td>تفاصيل وحدة</td><td><span class="badge badge-get">GET</span></td><td><code>/tables/units/{id}</code></td><td>إرجاع سجل كامل لوحدة واحدة</td></tr>
+        <tr><td>إضافة وحدة</td><td><span class="badge badge-post">POST</span></td><td><code>/tables/units</code></td><td>Body: JSON كامل لحقول الوحدة</td></tr>
+        <tr><td>تحديث كامل</td><td><span class="badge badge-put">PUT</span></td><td><code>/tables/units/{id}</code></td><td>استبدال كامل للسجل</td></tr>
+        <tr><td>تحديث جزئي</td><td><span class="badge badge-patch">PATCH</span></td><td><code>/tables/units/{id}</code></td><td>مثال: تحديث unit_status فقط</td></tr>
+        <tr><td>حذف وحدة</td><td><span class="badge badge-delete">DELETE</span></td><td><code>/tables/units/{id}</code></td><td>حذف منطقي (soft delete)</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>3.2 إدارة المدفوعات (Payments)</h3>
+    <div class="table-wrap"><table class="spec-table">
+      <thead><tr><th>الإجراء</th><th>Method</th><th>المسار</th><th>الوصف</th></tr></thead>
+      <tbody>
+        <tr><td>دفعات وحدة معيّنة</td><td><span class="badge badge-get">GET</span></td><td><code>/tables/payments?search={unit_id}</code></td><td>جميع دفعات عقد محدد مرتبة بالتاريخ</td></tr>
+        <tr><td>تسجيل سداد دفعة</td><td><span class="badge badge-patch">PATCH</span></td><td><code>/tables/payments/{id}</code></td><td>Body: <code>{"status":"مدفوعة","paid_date":"...","payment_method":"..."}</code></td></tr>
+        <tr><td>إضافة دفعة جديدة</td><td><span class="badge badge-post">POST</span></td><td><code>/tables/payments</code></td><td>عند تمديد/تجديد عقد أو جدولة دفعة إضافية</td></tr>
+        <tr><td>حذف دفعة (خطأ إدخال)</td><td><span class="badge badge-delete">DELETE</span></td><td><code>/tables/payments/{id}</code></td><td>صلاحية "مسؤول النظام" فقط</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>3.3 الملاحظات (Unit Notes)</h3>
+    <div class="table-wrap"><table class="spec-table">
+      <thead><tr><th>الإجراء</th><th>Method</th><th>المسار</th></tr></thead>
+      <tbody>
+        <tr><td>ملاحظات وحدة</td><td><span class="badge badge-get">GET</span></td><td><code>/tables/unit_notes?search={unit_id}</code></td></tr>
+        <tr><td>إضافة ملاحظة</td><td><span class="badge badge-post">POST</span></td><td><code>/tables/unit_notes</code></td></tr>
+        <tr><td>حذف ملاحظة</td><td><span class="badge badge-delete">DELETE</span></td><td><code>/tables/unit_notes/{id}</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>3.4 التقارير الدورية (Reports)</h3>
+    <p>في نموذج Backend مستقل (غير Static)، تُبنى نقاط نهاية تجميعية (Aggregation Endpoints) بدلاً من حساب كل شيء في العميل عند نمو حجم البيانات:</p>
+    <div class="table-wrap"><table class="spec-table">
+      <thead><tr><th>التقرير</th><th>Method</th><th>المسار المقترح</th><th>الإخراج</th></tr></thead>
+      <tbody>
+        <tr><td>ملخص الإشغال</td><td><span class="badge badge-get">GET</span></td><td><code>/reports/occupancy</code></td><td>عدد الوحدات: مؤجرة/شاغرة/صيانة/محجوزة</td></tr>
+        <tr><td>الدفعات المستحقة قريبًا</td><td><span class="badge badge-get">GET</span></td><td><code>/reports/upcoming-dues?days=30</code></td><td>قائمة دفعات تستحق ضمن مدى زمني</td></tr>
+        <tr><td>الدفعات المتأخرة</td><td><span class="badge badge-get">GET</span></td><td><code>/reports/overdue</code></td><td>دفعات فات تاريخ استحقاقها دون سداد</td></tr>
+        <tr><td>الإيرادات الشهرية</td><td><span class="badge badge-get">GET</span></td><td><code>/reports/revenue?from=&to=</code></td><td>إجمالي المسدد مقابل المستهدف لكل شهر</td></tr>
+        <tr><td>تصدير CSV/PDF</td><td><span class="badge badge-get">GET</span></td><td><code>/reports/export?type=payments&format=csv</code></td><td>ملف قابل للتنزيل (يتطلب Backend فعلي)</td></tr>
+      </tbody>
+    </table></div>
+    <div class="lead-note"><i class="fa-solid fa-triangle-exclamation"></i> <b>ملاحظة تنفيذية:</b> في النسخة التجريبية الحالية (Static/PWA) تُحسب التقارير على العميل (Client-side aggregation) من بيانات <code>/tables/*</code> مباشرة، وهذا مناسب لمكتب صغير. أما نسخة React/Backend فتستخدم فعليًا تجميعات PostgreSQL عبر <code>/reports/occupancy</code> و<code>/reports/unit-types</code> و<code>/reports/payment-status</code> و<code>/reports/revenue</code>، وتوفر <code>/reports/export?format=pdf</code> لإنشاء PDF على الخادم.</div>
+
+    <h3>3.5 صيغة الاستجابة الموحدة</h3>
+    <div class="table-wrap"><table class="spec-table">
+      <thead><tr><th>الحالة</th><th>الكود</th><th>مثال Body</th></tr></thead>
+      <tbody>
+        <tr><td>نجاح القائمة</td><td>200</td><td><code>{ "data":[...], "total":11, "page":1, "limit":20 }</code></td></tr>
+        <tr><td>إنشاء ناجح</td><td>201</td><td><code>{ "id":"u12", "created_at":..., ... }</code></td></tr>
+        <tr><td>حذف ناجح</td><td>204</td><td>بدون محتوى</td></tr>
+        <tr><td>خطأ تحقق</td><td>400</td><td><code>{ "error":"tenant_phone غير صالح" }</code></td></tr>
+        <tr><td>غير مصرح</td><td>401 / 403</td><td><code>{ "error":"صلاحيات غير كافية" }</code></td></tr>
+        <tr><td>غير موجود</td><td>404</td><td><code>{ "error":"السجل غير موجود" }</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>3.6 تصميم المصادقة (Authentication)</h3>
+    <ul class="check-list">
+      <li><b>الوضع الحالي (Static/PWA تجريبي):</b> لا توجد مصادقة خلفية حقيقية — أي تحقق في JavaScript يمكن قراءته وتجاوزه من مصدر الصفحة، ولا يُعتبر حماية فعلية.</li>
+      <li><b>الوضع الموصى به عند بناء Backend فعلي:</b> مصادقة عبر JWT (JSON Web Token) قصير الصلاحية + Refresh Token، مع تشفير كلمات المرور بخوارزمية bcrypt/argon2.</li>
+      <li>صلاحيات مبنية على الأدوار (RBAC): <code>مسؤول النظام</code> (كل الصلاحيات)، <code>موظف إدخال بيانات</code> (إضافة/تعديل دون حذف)، <code>مستخدم عرض فقط</code> (قراءة فقط + تقارير).</li>
+      <li>كل طلب API يحمل <code>Authorization: Bearer &lt;token&gt;</code> ويُتحقق من الدور قبل تنفيذ أي عملية كتابة/حذف على الخادم (وليس فقط إخفاء الزر في الواجهة).</li>
+    </ul>
+  </section>
+
+  <!-- ===================== 4. التقنيات ===================== -->
+  <section class="section" id="stack">
+    <h2><span class="num">4</span> التقنيات والأطر المقترحة</h2>
+    <p>ثلاث مجموعات تقنية بديلة (Stacks) لبناء نسخة Backend كاملة من هذا النظام مستقبلاً — إلى جانب الحل الحالي (Static PWA بدون خادم) المُنفَّذ في هذا التسليم.</p>
+
+    <div class="stack-tabs">
+      <button class="stack-tab-btn active" data-tab="s0">الحل الحالي: Static PWA</button>
+      <button class="stack-tab-btn" data-tab="s1">الخيار 1: Node.js Stack</button>
+      <button class="stack-tab-btn" data-tab="s2">الخيار 2: .NET Stack</button>
+      <button class="stack-tab-btn" data-tab="s3">الخيار 3: Python Stack</button>
+    </div>
+
+    <div class="stack-panel active" id="s0">
+      <div class="stack-box">
+        <h4><i class="fa-solid fa-bolt"></i> Static Web App + PWA + RESTful Table API (المُسلَّم حاليًا)</h4>
+        <span class="tech-chip">HTML5</span><span class="tech-chip">Tailwind CSS</span><span class="tech-chip">Vanilla JS</span><span class="tech-chip">Chart.js</span><span class="tech-chip">Service Worker</span><span class="tech-chip">RESTful Table API</span>
+        <div class="pros-cons">
+          <div class="pro"><h5>✅ الأفضلية</h5>لا تكلفة خادم/DevOps، نشر فوري بضغطة، أداء تحميل سريع جدًا، مناسب تمامًا لحجم بيانات مكتب صغير (عشرات–مئات الوحدات).</div>
+          <div class="con"><h5>⚠️ القيود</h5>لا مصادقة خلفية حقيقية، لا تقارير مجمّعة على خادم لبيانات ضخمة، لا معالجة ملفات/PDF من الخادم.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stack-panel" id="s1">
+      <div class="stack-box">
+        <h4><i class="fa-brands fa-node-js"></i> Node.js + Express + PostgreSQL + React</h4>
+        <span class="tech-chip">Node.js 20 LTS</span><span class="tech-chip">Express / Fastify</span><span class="tech-chip">PostgreSQL 15</span><span class="tech-chip">React + Vite</span><span class="tech-chip">Prisma ORM</span><span class="tech-chip">JWT</span>
+        <div class="pros-cons">
+          <div class="pro"><h5>✅ الأفضلية</h5>مجتمع ضخم ومكتبات جاهزة، سرعة تطوير عالية، تكلفة استضافة منخفضة (Render/Railway/VPS)، JS موحّد Front+Back يسهّل الفريق الواحد.</div>
+          <div class="con"><h5>⚠️ القيود</h5>يتطلب انضباطًا في هيكلة الكود (TypeScript موصى به)، إدارة أداء Node تحت تزامن مرتفع تحتاج خبرة إضافية.</div>
+        </div>
+        <p style="margin-top:14px;font-size:12.5px;color:var(--gray-600);"><b>الأداء/التكلفة:</b> ⭐⭐⭐⭐ أداء جيد لحمل متوسط، تكلفة استضافة منخفضة–متوسطة، سرعة تطوير مرتفعة جدًا.</p>
+        <p style="margin-top:10px;font-size:12.5px;color:var(--success);"><i class="fa-solid fa-circle-check"></i> <b>مُنفَّذ فعليًا بالكامل</b> في هذا المشروع: Backend في <code>/backend</code> وواجهة React في <code>/frontend-react</code>.</p>
+      </div>
+    </div>
+
+    <div class="stack-panel" id="s2">
+      <div class="stack-box">
+        <h4><i class="fa-solid fa-window-restore"></i> .NET 8 + SQL Server + Blazor</h4>
+        <span class="tech-chip">ASP.NET Core 8</span><span class="tech-chip">Entity Framework Core</span><span class="tech-chip">SQL Server</span><span class="tech-chip">Blazor Server/WASM</span><span class="tech-chip">Identity + JWT</span>
+        <div class="pros-cons">
+          <div class="pro"><h5>✅ الأفضلية</h5>أداء قوي ومناسب جدًا لبيئات Windows Server المؤسسية، أدوات نضج عالٍ (EF Core, Visual Studio)، أمان مدمج قوي (ASP.NET Identity).</div>
+          <div class="con"><h5>⚠️ القيود</h5>تكلفة ترخيص SQL Server في بعض السيناريوهات، منحنى تعلّم Blazor أعلى للفريق القادم من JS فقط.</div>
+        </div>
+        <p style="margin-top:14px;font-size:12.5px;color:var(--gray-600);"><b>الأداء/التكلفة:</b> ⭐⭐⭐⭐⭐ أداء عالٍ جدًا للأنظمة المؤسسية، تكلفة أعلى نسبيًا إن استُخدم SQL Server مرخّص بدل PostgreSQL.</p>
+      </div>
+    </div>
+
+    <div class="stack-panel" id="s3">
+      <div class="stack-box">
+        <h4><i class="fa-brands fa-python"></i> Python (FastAPI) + PostgreSQL + Vue.js</h4>
+        <span class="tech-chip">FastAPI</span><span class="tech-chip">SQLAlchemy</span><span class="tech-chip">PostgreSQL</span><span class="tech-chip">Vue 3 + Pinia</span><span class="tech-chip">Pydantic</span><span class="tech-chip">OAuth2/JWT</span>
+        <div class="pros-cons">
+          <div class="pro"><h5>✅ الأفضلية</h5>توليد تلقائي لوثائق API (Swagger/OpenAPI)، سرعة كتابة كود عالية وقابلية اختبار جيدة، مناسب لإضافة تحليلات/تقارير مستقبلية بـPandas.</div>
+          <div class="con"><h5>⚠️ القيود</h5>أداء التزامن العالي أقل من Node/.NET دون ضبط (Workers/Uvicorn)، يحتاج بنية نشر إضافية (Gunicorn/Uvicorn + Nginx).</div>
+        </div>
+        <p style="margin-top:14px;font-size:12.5px;color:var(--gray-600);"><b>الأداء/التكلفة:</b> ⭐⭐⭐⭐ سرعة تطوير عالية جدًا، تكلفة منخفضة، أداء جيد لحجم مكتب صغير–متوسط.</p>
+      </div>
+    </div>
+
+    <div class="lead-note"><i class="fa-solid fa-code-branch"></i> <b>تم التنفيذ فعليًا:</b> كود Backend حقيقي وكامل بمجموعة <b>Node.js + Express + PostgreSQL + JWT</b> (الخيار 1 أعلاه) متوفر الآن في مجلد <code>/backend</code> بجذر هذا المشروع — يتضمن مخطط SQL كامل، جميع نقاط API مع فرض صلاحيات RBAC حقيقي على الخادم، تجزيء كلمات مرور (bcrypt)، وتوثيق تشغيل خطوة بخطوة. راجع <code>backend/README.md</code>. يلزم استضافته على خادم يدعم Node.js (VPS/Render/Railway) لأن هذا المشروع نفسه Static Website.</div>
+
+    <div class="lead-note"><i class="fa-solid fa-diagram-project"></i> <b>اكتملت المجموعة الكاملة الآن (Backend + Frontend):</b> تمت أيضًا إضافة واجهة أمامية <b>React 18 + Vite</b> حقيقية وكاملة في مجلد <code>/frontend-react</code> تتصل مباشرة بالـ Backend أعلاه عبر REST API حقيقي (تسجيل دخول JWT فعلي، React Router، Chart.js، CRUD كامل للوحدات/المدفوعات/الملاحظات، إدارة مستخدمين لمسؤول النظام). بهذا تكتمل مجموعة <b>Node.js + Express + PostgreSQL + React</b> بكل طبقاتها (قاعدة بيانات + خادم + واجهة). راجع <code>frontend-react/README.md</code> لخطوات التشغيل والربط. كما هو الحال مع Backend، يلزم تشغيلها/بناؤها خارج بيئة هذا المشروع (Static Website) على جهاز أو استضافة تدعم Node.js.</div>
+
+    <h3>معيار الاختيار الموصى به لمكتب عقاري صغير</h3>
+    <p>لعدد وحدات محدود (حتى ~500 وحدة) وفريق تقني صغير أو معدوم: <b>الحل الحالي Static PWA</b> يكفي تمامًا مع أقل تكلفة تشغيلية. عند الحاجة لمصادقة حقيقية، صلاحيات دقيقة، تقارير PDF، أو نمو العملاء لعدة مكاتب/فروع، يُوصى بالترقية إلى <b>Node.js + PostgreSQL + React</b> لتوازنه بين السرعة والتكلفة وسهولة التوظيف المحلي لهذه المهارات.</p>
+  </section>
+
+  <!-- ===================== 5. الأمن ===================== -->
+  <section class="section" id="security">
+    <h2><span class="num">5</span> الأمن والامتثال والقيود</h2>
+
+    <h3>5.1 التشفير</h3>
+    <ul class="check-list">
+      <li>فرض HTTPS/TLS 1.2+ على كل الاتصالات (شرط أساسي لعمل PWA أيضًا).</li>
+      <li>تشفير كلمات المرور بخوارزمية Argon2/bcrypt عند بناء Backend فعلي — عدم تخزينها كنص صريح مطلقًا.</li>
+      <li>تشفير الحقول الحسّاسة في قاعدة البيانات وقت التخزين (Encryption at Rest) لرقم الهوية/جوال المستأجر عند استخدام قاعدة بيانات مؤسسية.</li>
+      <li>عدم تضمين أي مفاتيح API أو أسرار في كود العميل (Client-side) — يخالف هذا مبدأ الأمان الأساسي لأي تطبيق ويب.</li>
+    </ul>
+
+    <h3>5.2 إدارة الصلاحيات (الأدوار)</h3>
+    <div class="table-wrap"><table class="spec-table">
+      <thead><tr><th>الدور</th><th>الوحدات</th><th>المدفوعات</th><th>الملاحظات</th><th>التقارير</th><th>المستخدمون</th></tr></thead>
+      <tbody>
+        <tr><td><b>مسؤول النظام</b></td><td>كل الصلاحيات</td><td>كل الصلاحيات</td><td>كل الصلاحيات</td><td>عرض + تصدير</td><td>إدارة كاملة</td></tr>
+        <tr><td><b>موظف إدخال بيانات</b></td><td>إضافة/تعديل</td><td>إضافة/تحديث حالة</td><td>إضافة</td><td>عرض فقط</td><td>لا صلاحية</td></tr>
+        <tr><td><b>مستخدم عرض فقط</b></td><td>عرض فقط</td><td>عرض فقط</td><td>عرض فقط</td><td>عرض فقط</td><td>لا صلاحية</td></tr>
+      </tbody>
+    </table></div>
+    <div class="lead-note"><i class="fa-solid fa-shield-halved"></i> يجب فرض هذه الصلاحيات على مستوى الخادم (Backend Authorization) دومًا — إخفاء الأزرار في الواجهة فقط <b>لا يحقق أي حماية فعلية</b> لأن كود العميل قابل للقراءة والتعديل من المتصفح.</div>
+
+    <h3>5.3 النسخ الاحتياطي (Backup)</h3>
+    <ul class="check-list">
+      <li>نسخة احتياطية يومية تلقائية لقاعدة البيانات (Automated Daily Backup) بالاحتفاظ بها 30 يومًا على الأقل.</li>
+      <li>نسخة كاملة أسبوعية + نسخة شهرية بالاحتفاظ الطويل (Cold Storage) لمدة سنة على الأقل لأغراض تدقيقية/عقدية.</li>
+      <li>اختبار دوري لاستعادة النسخ الاحتياطية (Restore Drill) كل 3 أشهر للتأكد من صلاحيتها.</li>
+      <li>تصدير احتياطي يدوي (CSV/JSON) متاح للمسؤول عند الحاجة لأرشفة خارج النظام.</li>
+    </ul>
+
+    <h3>5.4 حماية البيانات الشخصية والامتثال المحلي</h3>
+    <ul class="check-list">
+      <li>الالتزام بـ <b>نظام حماية البيانات الشخصية السعودي (PDPL)</b> الصادر عن SDAIA: جمع الحد الأدنى من بيانات المستأجر اللازمة للعقد فقط، وعدم مشاركتها مع طرف ثالث دون موافقة.</li>
+      <li>سجل تدقيق (Audit Log) لكل من أضاف/عدّل/حذف سجل مستأجر أو دفعة، لأغراض المساءلة.</li>
+      <li>حق المستأجر بطلب الاطلاع على بياناته المحفوظة أو حذفها بعد انتهاء العقد وفق المهلة النظامية للاحتفاظ بالسجلات المالية/العقدية.</li>
+      <li>الاحتفاظ بأرقام الهوية/السجلات التجارية بصيغة مقنّعة جزئيًا (Masking) في الشاشات العامة، وإظهارها كاملة فقط لمسؤول النظام.</li>
+    </ul>
+  </section>
+
+  <!-- ===================== 6. التجربة والواجهة ===================== -->
+  <section class="section" id="ux">
+    <h2><span class="num">6</span> التجربة والواجهة (UX/UI)</h2>
+    <ul class="check-list">
+      <li>واجهة عربية RTL كاملة كلغة أساسية، مع بنية جاهزة لإضافة تبديل لغة EN (LTR) مستقبلاً دون إعادة هيكلة CSS (استخدام <code>dir</code> منطقي وليس تثبيت يمين/يسار).</li>
+      <li>خط Cairo/Tajawal لدعم القراءة العربية بوضوح على كل الأحجام.</li>
+      <li>تباين ألوان يحقق WCAG AA على الأقل لسهولة القراءة لكبار المستخدمين في المكتب العقاري.</li>
+    </ul>
+    <h3>الشاشات الرئيسية المسلَّمة في هذا التطبيق</h3>
+    <div class="card-grid">
+      <div class="info-card"><i class="fa-solid fa-gauge-high"></i><h4>لوحة التحكم (Dashboard)</h4><p>ملخص إشغال، دفعات مستحقة/متأخرة، رسم بياني للإيرادات.</p></div>
+      <div class="info-card"><i class="fa-solid fa-list-check"></i><h4>قائمة الوحدات</h4><p>بحث، فلترة بالحالة/النوع، فرز، بطاقات على الجوال وجدول على سطح المكتب.</p></div>
+      <div class="info-card"><i class="fa-solid fa-file-invoice"></i><h4>تفاصيل الوحدة</h4><p>بيانات العقد الكاملة + جدول الدفعات + سجل الملاحظات.</p></div>
+      <div class="info-card"><i class="fa-solid fa-hand-holding-dollar"></i><h4>إدارة المدفوعات</h4><p>عرض جميع الدفعات عبر كل الوحدات مع تصفية بالحالة والتاريخ.</p></div>
+      <div class="info-card"><i class="fa-solid fa-chart-column"></i><h4>التقارير</h4><p>رسوم بيانية للإشغال والإيرادات والدفعات المتأخرة.</p></div>
+      <div class="info-card"><i class="fa-solid fa-gears"></i><h4>الإعدادات والمستخدمون</h4><p>إدارة أدوار المستخدمين وتوضيح حدود الأمان في نسخة Static.</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== 7. بيانات الاختبار ===================== -->
+  <section class="section" id="testdata">
+    <h2><span class="num">7</span> نموذج بيانات للاختبار (11 سجلًا مُفصّلًا)</h2>
+    <p>تم تحميل هذه السجلات فعليًا في قاعدة بيانات المعاينة عبر جدول <code>units</code>، ويمكن استعراضها مباشرة داخل شاشة "قائمة الوحدات" في التطبيق التجريبي.</p>
+    <div class="table-wrap"><table class="spec-table">
+      <thead><tr><th>العقد</th><th>المستأجر</th><th>الوحدة</th><th>الإيجار</th><th>الدفعة الدورية</th><th>الاستحقاق</th><th>الدفعات</th><th>الحالة</th></tr></thead>
+      <tbody>
+        <tr><td>C-2025-101</td><td>محمد عبدالله القحطاني</td><td>A-101</td><td>24,000</td><td>6,000 / ربع سنوي</td><td>2026-10-01</td><td>3/4</td><td>مؤجرة</td></tr>
+        <tr><td>C-2025-102</td><td>سارة أحمد المطيري</td><td>A-102</td><td>18,000</td><td>4,500 / ربع سنوي</td><td>2026-09-15</td><td>2/4</td><td>مؤجرة</td></tr>
+        <tr><td>C-2024-055</td><td>خالد سعود العتيبي</td><td>B-201</td><td>15,000</td><td>15,000 / سنوي</td><td>2026-12-01</td><td>0/1</td><td>مؤجرة</td></tr>
+        <tr><td>—</td><td>—</td><td>B-202</td><td>14,000</td><td>—</td><td>—</td><td>0/0</td><td>شاغرة</td></tr>
+        <tr><td>C-2025-078</td><td>نورة فهد الدوسري</td><td>C-301</td><td>60,000</td><td>30,000 / نصف سنوي</td><td>2026-09-20</td><td>1/2</td><td>مؤجرة</td></tr>
+        <tr><td>C-2023-210</td><td>عبدالرحمن ياسر الشهري</td><td>C-302</td><td>55,000</td><td>55,000 / سنوي</td><td>2026-01-10</td><td>1/1</td><td>تحت الصيانة</td></tr>
+        <tr><td>C-2025-133</td><td>لمياء حسن الزهراني</td><td>D-401</td><td>32,000</td><td>8,000 / ربع سنوي</td><td>2026-09-25</td><td>3/4</td><td>مؤجرة</td></tr>
+        <tr><td>C-2025-144</td><td>فيصل تركي العنزي</td><td>D-402</td><td>36,000</td><td>3,000 / شهري</td><td>2026-09-30</td><td>11/12</td><td>مؤجرة</td></tr>
+        <tr><td>C-2024-199</td><td>منى عبدالعزيز آل الشيخ</td><td>E-501</td><td>16,000</td><td>4,000 / ربع سنوي</td><td>2026-11-05</td><td>2/4</td><td>مؤجرة</td></tr>
+        <tr><td>—</td><td>—</td><td>E-502</td><td>15,000</td><td>—</td><td>—</td><td>0/0</td><td>محجوزة</td></tr>
+        <tr><td>C-2025-160</td><td>عمر إبراهيم القرني</td><td>A-103</td><td>21,000</td><td>10,500 / نصف سنوي</td><td>2026-09-12</td><td>1/2</td><td>مؤجرة</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ===================== 8. الاختبار والجودة ===================== -->
+  <section class="section" id="qa">
+    <h2><span class="num">8</span> اختبارات وجودة البرمجيات</h2>
+
+    <h3>8.1 مستويات الاختبار</h3>
+    <div class="table-wrap"><table class="spec-table">
+      <thead><tr><th>المستوى</th><th>الأداة المقترحة</th><th>النطاق</th><th>معيار القبول</th></tr></thead>
+      <tbody>
+        <tr><td>اختبار الوحدة (Unit)</td><td>Jest / xUnit / Pytest</td><td>دوال حساب الدفعات المتأخرة، تنسيق العملة/التاريخ، التحقق من صحة الحقول</td><td>تغطية كود ≥ 80%</td></tr>
+        <tr><td>اختبار التكامل (Integration)</td><td>Supertest / Postman/Newman</td><td>كل نقاط API: إنشاء وحدة → إضافة دفعة → تعديل حالتها → حذف</td><td>100% من نقاط النهاية تُختبر بحالات نجاح وفشل</td></tr>
+        <tr><td>اختبار الواجهة (E2E/UI)</td><td>Playwright / Cypress</td><td>تدفقات المستخدم: تسجيل دخول، إضافة عقد، تسجيل سداد، عرض تقرير</td><td>لا أخطاء Console، تطابق بصري على 3 قياسات شاشة</td></tr>
+        <tr><td>اختبار الأداء</td><td>k6 / Lighthouse</td><td>زمن استجابة API، سرعة تحميل الصفحة الأولى (LCP)</td><td>API &lt; 300ms (p95)، Lighthouse Performance ≥ 90</td></tr>
+        <tr><td>اختبار الأمان</td><td>OWASP ZAP</td><td>حقن SQL، XSS، صلاحيات الوصول غير المصرح</td><td>عدم وجود ثغرات High/Critical</td></tr>
+        <tr><td>اختبار الاستجابة</td><td>PlaywrightScreenshot يدويًا</td><td>390px / 768px / 1280px+</td><td>لا تراكب عناصر، لا تمرير أفقي غير مقصود</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>8.2 حالات اختبار وظيفية نموذجية</h3>
+    <ul class="check-list">
+      <li>إنشاء وحدة جديدة بدون رقم عقد ← يجب أن تُصنَّف تلقائيًا "شاغرة".</li>
+      <li>تسجيل سداد دفعة ← يجب أن يزيد <code>payments_paid</code> بمقدار 1 تلقائيًا في سجل الوحدة.</li>
+      <li>دفعة تجاوز تاريخ استحقاقها دون سداد ← تنتقل حالتها تلقائيًا إلى "متأخرة" وتظهر في تنبيهات لوحة التحكم.</li>
+      <li>مستخدم بدور "عرض فقط" يحاول حذف وحدة عبر واجهة مُعدَّلة يدويًا في الأدوات المطوّرة ← يجب أن يُرفض الطلب من الخادم (401/403) وليس فقط إخفاء الزر.</li>
+      <li>البحث عن مستأجر برقم جواله الجزئي ← يجب أن تظهر جميع النتائج المطابقة.</li>
+    </ul>
+  </section>
+
+  <!-- ===================== 9. النشر ===================== -->
+  <section class="section" id="deploy">
+    <h2><span class="num">9</span> النشر والصيانة والتسليم</h2>
+
+    <h3>9.1 خط أنابيب CI/CD مقترح (عند تطوير Backend كامل)</h3>
+    <div class="timeline">
+      <div class="timeline-item"><h5>1. Commit & Push</h5><p>دفع الكود إلى مستودع Git (GitHub/GitLab) على فرع feature.</p></div>
+      <div class="timeline-item"><h5>2. Lint + Unit Tests</h5><p>تشغيل تلقائي عبر GitHub Actions/GitLab CI عند كل Pull Request.</p></div>
+      <div class="timeline-item"><h5>3. Build</h5><p>بناء صورة Docker للـBackend وحزمة Frontend (Vite/Webpack Build).</p></div>
+      <div class="timeline-item"><h5>4. Integration Tests</h5><p>تشغيل اختبارات API آلية على بيئة Staging.</p></div>
+      <div class="timeline-item"><h5>5. Deploy Staging</h5><p>نشر تلقائي لبيئة تجريبية للمراجعة اليدوية.</p></div>
+      <div class="timeline-item"><h5>6. Approval Gate</h5><p>موافقة يدوية من مسؤول المشروع قبل الإصدار للإنتاج.</p></div>
+      <div class="timeline-item"><h5>7. Deploy Production</h5><p>نشر تدريجي (Rolling Deploy) + نسخة احتياطية قبل الترحيل.</p></div>
+    </div>
+
+    <h3>9.2 النشر الفعلي لهذا التسليم (Static PWA)</h3>
+    <p>هذا التطبيق مبني كموقع ثابت (Static Site) ضمن بيئة Genspark. النشر يتم عبر:</p>
+    <ul class="check-list">
+      <li><b>تبويب "Publish"</b> في المحرر: نشر بضغطة واحدة على رابط <code>*.gensparkspace.com</code> (معاينة عامة مباشرة).</li>
+      <li><b>Hosted Deploy</b> (عند الطلب صريحًا): نشر على <code>*.vip.gensparksite.com</code> مع قاعدة بيانات D1 حقيقية تُنشأ تلقائيًا من نفس المخطط، وربط اختياري بدومين مخصص.</li>
+      <li>لا حاجة لأي إعداد خادم يدوي (Nginx/Docker) في هذه المرحلة — البنية بأكملها مُدارة من المنصة.</li>
+    </ul>
+
+    <h3>9.3 حزم النشر والوثائق المطلوبة</h3>
+    <div class="card-grid">
+      <div class="info-card"><i class="fa-solid fa-book"></i><h4>دليل المستخدم</h4><p>شرح مصوّر لكل شاشة: إضافة عقد، تسجيل دفعة، قراءة التقارير.</p></div>
+      <div class="info-card"><i class="fa-solid fa-code"></i><h4>دليل المطوّر</h4><p>هيكل الملفات، مخطط قاعدة البيانات، نقاط API، تعليمات التوسعة.</p></div>
+      <div class="info-card"><i class="fa-solid fa-server"></i><h4>تعليمات التشغيل والاحتياط</h4><p>جدول النسخ الاحتياطي، خطوات الاستعادة، جهات الاتصال الفنية.</p></div>
+      <div class="info-card"><i class="fa-solid fa-file-contract"></i><h4>README.md المشروع</h4><p>ملخص الميزات المكتملة والمتبقية وروابط الوصول.</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== 10. مخرجات التسليم ===================== -->
+  <section class="section" id="deliverables">
+    <h2><span class="num">10</span> ملخص مخرجات هذا التسليم</h2>
+    <ul class="check-list">
+      <li>وثيقة المواصفات التنفيذية الكاملة (هذه الصفحة) — قابلة للمشاركة والطباعة.</li>
+      <li>تطبيق ويب PWA فعلي وقابل للاستخدام يطبّق نموذج البيانات: لوحة تحكم، قائمة وحدات، تفاصيل وحدة، مدفوعات، تقارير، إعدادات.</li>
+      <li>4 جداول بيانات فعلية (units, payments, unit_notes, app_users) مع 11 وحدة تجريبية وبيانات دفعات وملاحظات مرتبطة.</li>
+      <li>تصميم استجابي كامل يعمل على Windows/macOS/Android/iOS وجميع المتصفحات المطلوبة.</li>
+      <li>README.md شامل بحالة المشروع والخطوات التالية.</li>
+      <li><b>Backend حقيقي كامل</b> (Node.js + Express + PostgreSQL + JWT) في مجلد <code>/backend</code> — مصادقة وصلاحيات RBAC مفروضة فعليًا على الخادم، مطابق لكل الحقول والقواعد الموضّحة في هذه الوثيقة.</li>
+      <li><b>واجهة React كاملة</b> (React 18 + Vite + React Router + Chart.js) في مجلد <code>/frontend-react</code> تتصل مباشرة بالـ Backend أعلاه، مكمّلة بذلك مجموعة <b>Node.js + Express + PostgreSQL + React</b> بكامل طبقاتها.</li>
+    </ul>
+    <div class="lead-note"><i class="fa-solid fa-circle-info"></i> ملاحظة أمانة تقنية: النسخة الأساسية المعروضة عبر <code>index.html</code> وما حولها هي <b>Static Website</b> بدون خادم Backend حقيقي، وبالتالي أي "تسجيل دخول" فيها هو محاكاة عرض أدوار فقط (لأغراض العرض التجريبي) ولا يوفر حماية أمنية فعلية — كما هو مبيّن بوضوح في شاشة الإعدادات داخل التطبيق. أما مجلدا <code>/backend</code> و<code>/frontend-react</code> فيحتويان كودًا حقيقيًا بمصادقة وصلاحيات فعلية على مستوى الخادم، لكنهما يتطلبان تشغيلًا/نشرًا على استضافة تدعم Node.js خارج بيئة هذا المشروع (Static Website) — راجع <code>backend/README.md</code> و<code>frontend-react/README.md</code>.</div>
+  </section>
+
+  <footer class="spec-footer">
+    © 2026 نظام إدارة العقارات — وثيقة مواصفات تنفيذية · الإصدار 1.0 · جميع الحقوق محفوظة لصاحب المشروع
+  </footer>
+
+</main>
+
+<script>
+  const menuBtn = document.getElementById('menuBtn');
+  const sidebar = document.getElementById('sidebar');
+  menuBtn && menuBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+  document.querySelectorAll('.spec-nav a').forEach(a=>{
+    a.addEventListener('click', ()=> sidebar.classList.remove('open'));
+  });
+
+  // تبويبات الحلول التقنية
+  document.querySelectorAll('.stack-tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.stack-tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.stack-panel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  }
+</script>
+</body>
+</html>

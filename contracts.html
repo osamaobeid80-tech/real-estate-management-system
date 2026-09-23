@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>العقود | نظام إدارة العقارات</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f4c5c">
+<link rel="apple-touch-icon" href="images/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebarContainer"></div>
+  <main class="app-main">
+    <div id="topbarContainer"></div>
+
+    <div class="app-content">
+      <div class="security-banner" style="background:var(--primary-light);border-color:#bcdfe6;color:var(--primary-dark);">
+        <i class="fa-solid fa-circle-info"></i>
+        <div>هذه شاشة إدارة <b>عقود الإيجار</b> بشكل مستقل — كل عقد مرتبط بوحدة واحدة من شاشة <a href="units.html" style="color:inherit;text-decoration:underline;">الوحدات</a>. لإضافة عقد جديد يجب اختيار وحدة شاغرة أولًا.</div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="بحث باسم المستأجر، رقم العقد، رقم الوحدة...">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <select class="filter-select" id="statusFilter">
+          <option value="">كل الحالات</option>
+          <option value="نشط">نشط</option>
+          <option value="منتهي">منتهي</option>
+          <option value="ملغى">ملغى</option>
+        </select>
+        <button class="btn btn-primary" id="addContractBtn"><i class="fa-solid fa-plus"></i> إضافة عقد جديد</button>
+      </div>
+
+      <div class="panel" style="padding:0;overflow:hidden;">
+        <div class="table-wrap desktop-only">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>رقم العقد</th><th>الوحدة / العقار</th><th>المستأجر</th><th>الجوال</th>
+                <th>الإيجار السنوي</th><th>الدفعة الدورية</th><th>الاستحقاق القادم</th><th>الدفعات</th><th>الحالة</th><th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="contractsTableBody">
+              <tr><td colspan="10" style="text-align:center;padding:30px;color:var(--gray-600);">جارِ التحميل...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="mobile-cards-only" id="contractsCardsWrap" style="padding:14px;"></div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="bottomNavContainer"></div>
+
+<!-- مودال إضافة/تعديل عقد -->
+<div class="modal-overlay" id="contractModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="contractModalTitle">إضافة عقد جديد</h3>
+      <button class="modal-close" onclick="closeModal('contractModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="contractForm">
+        <input type="hidden" id="contractId">
+        <div class="form-row">
+          <div class="form-group" style="grid-column:1 / -1;">
+            <label>الوحدة *</label>
+            <select class="form-control" id="f_unit_id"></select>
+            <div class="hint">تظهر الوحدات الشاغرة فقط عند الإضافة، وجميع الوحدات عند التعديل.</div>
+          </div>
+          <div class="form-group"><label>رقم العقد</label><input class="form-control" id="f_contract_number"></div>
+          <div class="form-group"><label>حالة العقد</label>
+            <select class="form-control" id="f_contract_status">
+              <option>نشط</option><option>منتهي</option><option>ملغى</option>
+            </select>
+          </div>
+        </div>
+
+        <h4 style="font-size:13px;color:var(--primary);margin:18px 0 10px;">بيانات المستأجر</h4>
+        <div class="form-row">
+          <div class="form-group"><label>اسم المستأجر</label><input class="form-control" id="f_tenant_name"></div>
+          <div class="form-group"><label>جوال المستأجر</label><input class="form-control" id="f_tenant_phone" placeholder="05xxxxxxxx"></div>
+          <div class="form-group"><label>رقم الهوية / السجل التجاري</label><input class="form-control" id="f_tenant_id_number"></div>
+        </div>
+
+        <h4 style="font-size:13px;color:var(--primary);margin:18px 0 10px;">بيانات مالية وزمنية</h4>
+        <div class="form-row">
+          <div class="form-group"><label>قيمة الإيجار الإجمالية (ريال)</label><input type="number" class="form-control" id="f_rent_value"></div>
+          <div class="form-group"><label>قيمة الدفعة الدورية (ريال)</label><input type="number" class="form-control" id="f_payment_installment"></div>
+          <div class="form-group"><label>دورية الدفع</label>
+            <select class="form-control" id="f_payment_frequency">
+              <option>شهري</option><option>ربع سنوي</option><option>نصف سنوي</option><option>سنوي</option>
+            </select>
+          </div>
+          <div class="form-group"><label>عدد الدفعات الكلي</label><input type="number" class="form-control" id="f_payments_count"></div>
+          <div class="form-group"><label>تاريخ استحقاق أول دفعة</label><input type="date" class="form-control" id="f_due_date"></div>
+          <div class="form-group"><label>تاريخ بداية العقد</label><input type="date" class="form-control" id="f_contract_start_date"></div>
+          <div class="form-group"><label>تاريخ نهاية العقد</label><input type="date" class="form-control" id="f_contract_end_date"></div>
+        </div>
+        <div class="form-group"><label>ملاحظات على العقد</label><textarea class="form-control" id="f_notes" rows="2"></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('contractModal')">إلغاء</button>
+      <button class="btn btn-primary" id="saveContractBtn"><i class="fa-solid fa-floppy-disk"></i> حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/data.js"></script>
+<script>
+renderShell('contracts');
+
+let allContracts = [];
+let allUnits = [];
+let allProperties = [];
+
+function unitLabel(u){
+  if(!u) return '—';
+  const prop = allProperties.find(p=>p.id===u.property_id);
+  return `${u.unit_number}${prop ? ' · ' + prop.property_name : ''}`;
+}
+
+async function loadContracts(){
+  try{
+    [allContracts, allUnits, allProperties] = await Promise.all([
+      API.listAll('contracts'),
+      API.listAll('units'),
+      API.listAll('properties')
+    ]);
+    applyFilters();
+  }catch(e){
+    showToast('فشل تحميل العقود', 'error');
+    console.error(e);
+  }
+}
+
+function applyFilters(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  let filtered = allContracts.filter(c => {
+    if(status && c.contract_status !== status) return false;
+    if(q){
+      const unit = allUnits.find(u=>u.id===c.unit_id);
+      const hay = [c.contract_number, c.tenant_name, c.tenant_phone, unit?.unit_number].join(' ').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  renderTable(filtered);
+  renderCards(filtered);
+}
+
+function renderTable(list){
+  const body = document.getElementById('contractsTableBody');
+  if(list.length === 0){
+    body.innerHTML = `<tr><td colspan="10"><div class="empty-state"><i class="fa-solid fa-inbox"></i>لا توجد نتائج مطابقة</div></td></tr>`;
+    return;
+  }
+  body.innerHTML = list.map(c => {
+    const unit = allUnits.find(u=>u.id===c.unit_id);
+    return `
+    <tr>
+      <td><b>${escapeHtml(c.contract_number || '—')}</b></td>
+      <td><a href="unit-detail.html?id=${c.unit_id}" style="color:var(--primary);text-decoration:none;font-weight:700;">${escapeHtml(unitLabel(unit))}</a></td>
+      <td>${escapeHtml(c.tenant_name || '—')}</td>
+      <td>${escapeHtml(c.tenant_phone || '—')}</td>
+      <td>${formatCurrency(c.rent_value)}</td>
+      <td>${formatCurrency(c.payment_installment)} <span style="font-size:10.5px;color:var(--gray-600);">/ ${escapeHtml(c.payment_frequency||'')}</span></td>
+      <td>${formatDate(c.due_date)}</td>
+      <td>${c.payments_paid ?? 0} / ${c.payments_count ?? 0}</td>
+      <td><span class="status-badge dot ${contractStatusBadgeClass(c.contract_status)}">${escapeHtml(c.contract_status||'نشط')}</span></td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <a href="unit-detail.html?id=${c.unit_id}" class="btn btn-outline btn-icon" title="عرض تفاصيل الوحدة"><i class="fa-solid fa-eye"></i></a>
+          <button class="btn btn-outline btn-icon" title="تعديل" onclick="editContract('${c.id}')" ${canEdit()?'':'disabled'}><i class="fa-solid fa-pen"></i></button>
+          <button class="btn btn-danger btn-icon" title="حذف" onclick="deleteContract('${c.id}')" ${canDelete()?'':'disabled'}><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </td>
+    </tr>
+  `;}).join('');
+}
+
+function renderCards(list){
+  const wrap = document.getElementById('contractsCardsWrap');
+  if(list.length === 0){
+    wrap.innerHTML = `<div class="empty-state"><i class="fa-solid fa-inbox"></i>لا توجد نتائج مطابقة</div>`;
+    return;
+  }
+  wrap.innerHTML = list.map(c => {
+    const unit = allUnits.find(u=>u.id===c.unit_id);
+    return `
+    <div class="unit-card">
+      <div class="uc-head">
+        <div>
+          <div class="uc-title">${escapeHtml(c.contract_number || 'بدون رقم')}</div>
+          <div class="uc-sub">${escapeHtml(unitLabel(unit))} · ${escapeHtml(c.tenant_name || '—')}</div>
+        </div>
+        <span class="status-badge dot ${contractStatusBadgeClass(c.contract_status)}">${escapeHtml(c.contract_status||'نشط')}</span>
+      </div>
+      <div class="uc-row"><span>الإيجار السنوي</span><span>${formatCurrency(c.rent_value)}</span></div>
+      <div class="uc-row"><span>الدفعة الدورية</span><span>${formatCurrency(c.payment_installment)}</span></div>
+      <div class="uc-row"><span>الاستحقاق القادم</span><span>${formatDate(c.due_date)}</span></div>
+      <div class="uc-row"><span>الدفعات</span><span>${c.payments_paid ?? 0} / ${c.payments_count ?? 0}</span></div>
+      <div class="uc-actions">
+        <a href="unit-detail.html?id=${c.unit_id}" class="btn btn-outline btn-sm" style="flex:1;"><i class="fa-solid fa-eye"></i> التفاصيل</a>
+        <button class="btn btn-outline btn-sm btn-icon" onclick="editContract('${c.id}')" ${canEdit()?'':'disabled'}><i class="fa-solid fa-pen"></i></button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteContract('${c.id}')" ${canDelete()?'':'disabled'}><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>
+  `;}).join('');
+}
+
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('statusFilter').addEventListener('change', applyFilters);
+
+function populateUnitSelect(includeAll){
+  const sel = document.getElementById('f_unit_id');
+  const contractedUnitIds = new Set(allContracts.map(c=>c.unit_id));
+  const options = allUnits.filter(u => includeAll || u.unit_status === 'شاغرة' || !contractedUnitIds.has(u.id));
+  if(options.length === 0){
+    sel.innerHTML = `<option value="">لا توجد وحدات متاحة</option>`;
+    return;
+  }
+  sel.innerHTML = options.map(u => `<option value="${u.id}">${escapeHtml(unitLabel(u))}</option>`).join('');
+}
+
+document.getElementById('addContractBtn').addEventListener('click', () => {
+  if(!canEdit()){ showToast('لا تملك صلاحية الإضافة (دور عرض فقط)', 'error'); return; }
+  document.getElementById('contractForm').reset();
+  document.getElementById('contractId').value = '';
+  populateUnitSelect(false);
+  document.getElementById('contractModalTitle').textContent = 'إضافة عقد جديد';
+  openModal('contractModal');
+});
+
+function toDateInput(v){
+  if(!v) return '';
+  const d = new Date(v);
+  if(isNaN(d.getTime())) return '';
+  return d.toISOString().slice(0,10);
+}
+
+window.editContract = function(id){
+  if(!canEdit()){ showToast('لا تملك صلاحية التعديل (دور عرض فقط)', 'error'); return; }
+  const c = allContracts.find(x=>x.id===id);
+  if(!c) return;
+  populateUnitSelect(true);
+  document.getElementById('contractId').value = c.id;
+  document.getElementById('f_unit_id').value = c.unit_id || '';
+  document.getElementById('f_contract_number').value = c.contract_number || '';
+  document.getElementById('f_contract_status').value = c.contract_status || 'نشط';
+  document.getElementById('f_tenant_name').value = c.tenant_name || '';
+  document.getElementById('f_tenant_phone').value = c.tenant_phone || '';
+  document.getElementById('f_tenant_id_number').value = c.tenant_id_number || '';
+  document.getElementById('f_rent_value').value = c.rent_value || '';
+  document.getElementById('f_payment_installment').value = c.payment_installment || '';
+  document.getElementById('f_payment_frequency').value = c.payment_frequency || 'شهري';
+  document.getElementById('f_payments_count').value = c.payments_count || '';
+  document.getElementById('f_due_date').value = toDateInput(c.due_date);
+  document.getElementById('f_contract_start_date').value = toDateInput(c.contract_start_date);
+  document.getElementById('f_contract_end_date').value = toDateInput(c.contract_end_date);
+  document.getElementById('f_notes').value = c.notes || '';
+  document.getElementById('contractModalTitle').textContent = 'تعديل بيانات العقد';
+  openModal('contractModal');
+};
+
+document.getElementById('saveContractBtn').addEventListener('click', async () => {
+  const unitId = document.getElementById('f_unit_id').value;
+  if(!unitId){ showToast('يرجى اختيار الوحدة', 'error'); return; }
+  const payload = {
+    unit_id: unitId,
+    contract_number: document.getElementById('f_contract_number').value.trim(),
+    contract_status: document.getElementById('f_contract_status').value,
+    tenant_name: document.getElementById('f_tenant_name').value.trim(),
+    tenant_phone: document.getElementById('f_tenant_phone').value.trim(),
+    tenant_id_number: document.getElementById('f_tenant_id_number').value.trim(),
+    rent_value: Number(document.getElementById('f_rent_value').value) || 0,
+    payment_installment: Number(document.getElementById('f_payment_installment').value) || 0,
+    payment_frequency: document.getElementById('f_payment_frequency').value,
+    payments_count: Number(document.getElementById('f_payments_count').value) || 0,
+    due_date: document.getElementById('f_due_date').value || null,
+    contract_start_date: document.getElementById('f_contract_start_date').value || null,
+    contract_end_date: document.getElementById('f_contract_end_date').value || null,
+    notes: document.getElementById('f_notes').value.trim(),
+  };
+
+  const id = document.getElementById('contractId').value;
+  try{
+    if(id){
+      await API.update('contracts', id, payload);
+      showToast('تم تحديث العقد بنجاح', 'success');
+    }else{
+      payload.payments_paid = 0;
+      await API.create('contracts', payload);
+      // تحديث حالة الوحدة تلقائيًا إلى "مؤجرة" عند إنشاء عقد جديد
+      await API.update('units', unitId, { unit_status: 'مؤجرة' });
+      showToast('تمت إضافة العقد بنجاح', 'success');
+    }
+    closeModal('contractModal');
+    loadContracts();
+  }catch(e){
+    showToast('حدث خطأ أثناء الحفظ', 'error');
+    console.error(e);
+  }
+});
+
+window.deleteContract = async function(id){
+  if(!canDelete()){ showToast('الحذف متاح لمسؤول النظام فقط', 'error'); return; }
+  if(!confirm('هل أنت متأكد من حذف هذا العقد؟')) return;
+  try{
+    await API.remove('contracts', id);
+    showToast('تم حذف العقد', 'success');
+    loadContracts();
+  }catch(e){
+    showToast('فشل حذف العقد', 'error');
+  }
+};
+
+loadContracts();
+</script>
+</body>
+</html>

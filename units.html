@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الوحدات | نظام إدارة العقارات</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f4c5c">
+<link rel="apple-touch-icon" href="images/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebarContainer"></div>
+  <main class="app-main">
+    <div id="topbarContainer"></div>
+
+    <div class="app-content">
+      <div class="security-banner" style="background:var(--primary-light);border-color:#bcdfe6;color:var(--primary-dark);">
+        <i class="fa-solid fa-circle-info"></i>
+        <div>هذه شاشة إدارة <b>الوحدات العقارية</b> فقط (بدون بيانات العقد/المستأجر) — كل وحدة تابعة لعقار من شاشة <a href="properties.html" style="color:inherit;text-decoration:underline;">العقارات</a>، وبيانات الإيجار والمستأجر أصبحت في شاشة <a href="contracts.html" style="color:inherit;text-decoration:underline;">العقود</a> المرتبطة بالوحدة.</div>
+      </div>
+
+      <div id="propertyFilterBanner"></div>
+
+      <div class="toolbar">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="بحث برقم الوحدة أو العقار...">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <select class="filter-select" id="propertyFilter">
+          <option value="">كل العقارات</option>
+        </select>
+        <select class="filter-select" id="statusFilter">
+          <option value="">كل الحالات</option>
+          <option value="مؤجرة">مؤجرة</option>
+          <option value="شاغرة">شاغرة</option>
+          <option value="تحت الصيانة">تحت الصيانة</option>
+          <option value="محجوزة">محجوزة</option>
+        </select>
+        <select class="filter-select" id="typeFilter">
+          <option value="">كل الأنواع</option>
+          <option value="شقة">شقة</option>
+          <option value="محل تجاري">محل تجاري</option>
+          <option value="مكتب">مكتب</option>
+          <option value="فيلا">فيلا</option>
+          <option value="مستودع">مستودع</option>
+          <option value="استوديو">استوديو</option>
+        </select>
+        <button class="btn btn-primary" id="addUnitBtn"><i class="fa-solid fa-plus"></i> إضافة وحدة</button>
+      </div>
+
+      <div class="panel" style="padding:0;overflow:hidden;">
+        <div class="table-wrap desktop-only">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>رقم الوحدة</th><th>العقار</th><th>النوع</th>
+                <th>الطابق</th><th>المساحة</th><th>الحالة</th><th>رقم العقد الحالي</th><th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="unitsTableBody">
+              <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--gray-600);">جارِ التحميل...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="mobile-cards-only" id="unitsCardsWrap" style="padding:14px;"></div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="bottomNavContainer"></div>
+
+<!-- مودال إضافة/تعديل وحدة -->
+<div class="modal-overlay" id="unitModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="unitModalTitle">إضافة وحدة جديدة</h3>
+      <button class="modal-close" onclick="closeModal('unitModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="unitForm">
+        <input type="hidden" id="unitId">
+        <div class="form-row">
+          <div class="form-group" style="grid-column:1 / -1;">
+            <label>العقار *</label>
+            <select class="form-control" id="f_property_id"></select>
+            <div class="hint">إن لم يظهر العقار المطلوب، أضِفه أولًا من شاشة <a href="properties.html">العقارات</a>.</div>
+          </div>
+          <div class="form-group"><label>رقم الوحدة *</label><input required class="form-control" id="f_unit_number"></div>
+          <div class="form-group"><label>نوع الوحدة</label>
+            <select class="form-control" id="f_unit_type">
+              <option>شقة</option><option>محل تجاري</option><option>مكتب</option><option>فيلا</option><option>مستودع</option><option>استوديو</option>
+            </select>
+          </div>
+          <div class="form-group"><label>الطابق</label><input class="form-control" id="f_floor"></div>
+          <div class="form-group"><label>المساحة (م²)</label><input type="number" class="form-control" id="f_area_sqm"></div>
+          <div class="form-group"><label>حالة الوحدة</label>
+            <select class="form-control" id="f_unit_status">
+              <option>شاغرة</option><option>مؤجرة</option><option>تحت الصيانة</option><option>محجوزة</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label>ملاحظات عامة</label><textarea class="form-control" id="f_notes" rows="2"></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('unitModal')">إلغاء</button>
+      <button class="btn btn-primary" id="saveUnitBtn"><i class="fa-solid fa-floppy-disk"></i> حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/data.js"></script>
+<script>
+renderShell('units');
+
+let allUnits = [];
+let allProperties = [];
+let allContracts = [];
+
+const urlParams = new URLSearchParams(window.location.search);
+let propertyFilterFromUrl = urlParams.get('property') || '';
+
+async function loadUnits(){
+  try{
+    [allUnits, allProperties, allContracts] = await Promise.all([
+      API.listAll('units'),
+      API.listAll('properties'),
+      API.listAll('contracts')
+    ]);
+    populatePropertySelects();
+    if(propertyFilterFromUrl){
+      document.getElementById('propertyFilter').value = propertyFilterFromUrl;
+      renderPropertyFilterBanner();
+    }
+    applyFilters();
+  }catch(e){
+    showToast('فشل تحميل الوحدات', 'error');
+    console.error(e);
+  }
+}
+
+function propertyName(propertyId){
+  const p = allProperties.find(x=>x.id===propertyId);
+  return p ? p.property_name : '—';
+}
+
+function activeContractFor(unitId){
+  const list = allContracts.filter(c=>c.unit_id===unitId);
+  if(list.length === 0) return null;
+  return list.find(c=>c.contract_status==='نشط' || !c.contract_status) || list[0];
+}
+
+function populatePropertySelects(){
+  const filterSel = document.getElementById('propertyFilter');
+  const formSel = document.getElementById('f_property_id');
+  const opts = allProperties.map(p => `<option value="${p.id}">${escapeHtml(p.property_name)}</option>`).join('');
+  filterSel.innerHTML = `<option value="">كل العقارات</option>${opts}`;
+  formSel.innerHTML = opts || `<option value="">لا توجد عقارات — أضِف عقارًا أولًا</option>`;
+}
+
+function renderPropertyFilterBanner(){
+  const wrap = document.getElementById('propertyFilterBanner');
+  const prop = allProperties.find(p=>p.id===propertyFilterFromUrl);
+  if(!propertyFilterFromUrl || !prop){ wrap.innerHTML=''; return; }
+  wrap.innerHTML = `
+    <div class="security-banner" style="background:var(--gray-50);border-color:var(--gray-200);color:var(--gray-800);">
+      <i class="fa-solid fa-filter"></i>
+      <div>تعرض القائمة وحدات عقار <b>${escapeHtml(prop.property_name)}</b> فقط. <a href="#" id="clearPropertyFilterLink" style="color:var(--primary);text-decoration:underline;">إزالة التصفية</a></div>
+    </div>`;
+  document.getElementById('clearPropertyFilterLink').addEventListener('click', (e)=>{
+    e.preventDefault();
+    propertyFilterFromUrl = '';
+    document.getElementById('propertyFilter').value = '';
+    renderPropertyFilterBanner();
+    applyFilters();
+    history.replaceState(null, '', 'units.html');
+  });
+}
+
+function applyFilters(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  const type = document.getElementById('typeFilter').value;
+  const propertyId = document.getElementById('propertyFilter').value;
+
+  let filtered = allUnits.filter(u => {
+    if(status && u.unit_status !== status) return false;
+    if(type && u.unit_type !== type) return false;
+    if(propertyId && u.property_id !== propertyId) return false;
+    if(q){
+      const hay = [u.unit_number, propertyName(u.property_id)].join(' ').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  renderTable(filtered);
+  renderCards(filtered);
+}
+
+function renderTable(list){
+  const body = document.getElementById('unitsTableBody');
+  if(list.length === 0){
+    body.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-inbox"></i>لا توجد نتائج مطابقة</div></td></tr>`;
+    return;
+  }
+  body.innerHTML = list.map(u => {
+    const contract = activeContractFor(u.id);
+    return `
+    <tr>
+      <td><b>${escapeHtml(u.unit_number)}</b></td>
+      <td><a href="properties.html" style="color:var(--primary);text-decoration:none;">${escapeHtml(propertyName(u.property_id))}</a></td>
+      <td>${escapeHtml(u.unit_type||'—')}</td>
+      <td>${escapeHtml(u.floor||'—')}</td>
+      <td>${u.area_sqm ? u.area_sqm+' م²' : '—'}</td>
+      <td><span class="status-badge dot ${unitStatusBadgeClass(u.unit_status)}">${escapeHtml(u.unit_status)}</span></td>
+      <td>${contract ? `<a href="contracts.html" style="color:var(--primary);font-weight:700;text-decoration:none;">${escapeHtml(contract.contract_number||'بدون رقم')}</a>` : '<span style="color:var(--gray-600);">لا يوجد</span>'}</td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <a href="unit-detail.html?id=${u.id}" class="btn btn-outline btn-icon" title="عرض التفاصيل"><i class="fa-solid fa-eye"></i></a>
+          <button class="btn btn-outline btn-icon" title="تعديل" onclick="editUnit('${u.id}')" ${canEdit()?'':'disabled'}><i class="fa-solid fa-pen"></i></button>
+          <button class="btn btn-danger btn-icon" title="حذف" onclick="deleteUnit('${u.id}')" ${canDelete()?'':'disabled'}><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </td>
+    </tr>
+  `;}).join('');
+}
+
+function renderCards(list){
+  const wrap = document.getElementById('unitsCardsWrap');
+  if(list.length === 0){
+    wrap.innerHTML = `<div class="empty-state"><i class="fa-solid fa-inbox"></i>لا توجد نتائج مطابقة</div>`;
+    return;
+  }
+  wrap.innerHTML = list.map(u => {
+    const contract = activeContractFor(u.id);
+    return `
+    <div class="unit-card">
+      <div class="uc-head">
+        <div>
+          <div class="uc-title">${escapeHtml(u.unit_number)} <span style="font-weight:400;color:var(--gray-600);font-size:12px;">${escapeHtml(u.unit_type||'')}</span></div>
+          <div class="uc-sub">${escapeHtml(propertyName(u.property_id))}</div>
+        </div>
+        <span class="status-badge dot ${unitStatusBadgeClass(u.unit_status)}">${escapeHtml(u.unit_status)}</span>
+      </div>
+      <div class="uc-row"><span>الطابق</span><span>${escapeHtml(u.floor||'—')}</span></div>
+      <div class="uc-row"><span>المساحة</span><span>${u.area_sqm ? u.area_sqm+' م²' : '—'}</span></div>
+      <div class="uc-row"><span>رقم العقد الحالي</span><span>${contract ? escapeHtml(contract.contract_number||'بدون رقم') : 'لا يوجد'}</span></div>
+      <div class="uc-actions">
+        <a href="unit-detail.html?id=${u.id}" class="btn btn-outline btn-sm" style="flex:1;"><i class="fa-solid fa-eye"></i> التفاصيل</a>
+        <button class="btn btn-outline btn-sm btn-icon" onclick="editUnit('${u.id}')" ${canEdit()?'':'disabled'}><i class="fa-solid fa-pen"></i></button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteUnit('${u.id}')" ${canDelete()?'':'disabled'}><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>
+  `;}).join('');
+}
+
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('statusFilter').addEventListener('change', applyFilters);
+document.getElementById('typeFilter').addEventListener('change', applyFilters);
+document.getElementById('propertyFilter').addEventListener('change', ()=>{
+  propertyFilterFromUrl = document.getElementById('propertyFilter').value;
+  renderPropertyFilterBanner();
+  applyFilters();
+});
+
+// ---- إضافة / تعديل ----
+document.getElementById('addUnitBtn').addEventListener('click', () => {
+  if(!canEdit()){ showToast('لا تملك صلاحية الإضافة (دور عرض فقط)', 'error'); return; }
+  if(allProperties.length === 0){ showToast('يجب إضافة عقار واحد على الأقل أولًا', 'error'); return; }
+  document.getElementById('unitForm').reset();
+  document.getElementById('unitId').value = '';
+  if(propertyFilterFromUrl) document.getElementById('f_property_id').value = propertyFilterFromUrl;
+  document.getElementById('unitModalTitle').textContent = 'إضافة وحدة جديدة';
+  openModal('unitModal');
+});
+
+window.editUnit = function(id){
+  if(!canEdit()){ showToast('لا تملك صلاحية التعديل (دور عرض فقط)', 'error'); return; }
+  const u = allUnits.find(x=>x.id===id);
+  if(!u) return;
+  document.getElementById('unitId').value = u.id;
+  document.getElementById('f_property_id').value = u.property_id || '';
+  document.getElementById('f_unit_number').value = u.unit_number || '';
+  document.getElementById('f_unit_type').value = u.unit_type || 'شقة';
+  document.getElementById('f_floor').value = u.floor || '';
+  document.getElementById('f_area_sqm').value = u.area_sqm || '';
+  document.getElementById('f_unit_status').value = u.unit_status || 'شاغرة';
+  document.getElementById('f_notes').value = u.notes || '';
+  document.getElementById('unitModalTitle').textContent = 'تعديل بيانات الوحدة';
+  openModal('unitModal');
+};
+
+document.getElementById('saveUnitBtn').addEventListener('click', async () => {
+  if(!document.getElementById('f_unit_number').value.trim()){
+    showToast('رقم الوحدة مطلوب', 'error'); return;
+  }
+  if(!document.getElementById('f_property_id').value){
+    showToast('يرجى اختيار العقار', 'error'); return;
+  }
+  const payload = {
+    property_id: document.getElementById('f_property_id').value,
+    unit_number: document.getElementById('f_unit_number').value.trim(),
+    unit_type: document.getElementById('f_unit_type').value,
+    floor: document.getElementById('f_floor').value.trim(),
+    area_sqm: Number(document.getElementById('f_area_sqm').value) || 0,
+    unit_status: document.getElementById('f_unit_status').value,
+    notes: document.getElementById('f_notes').value.trim(),
+  };
+
+  const id = document.getElementById('unitId').value;
+  try{
+    if(id){
+      await API.update('units', id, payload);
+      showToast('تم تحديث الوحدة بنجاح', 'success');
+    }else{
+      await API.create('units', payload);
+      showToast('تمت إضافة الوحدة بنجاح', 'success');
+    }
+    closeModal('unitModal');
+    loadUnits();
+  }catch(e){
+    showToast('حدث خطأ أثناء الحفظ', 'error');
+    console.error(e);
+  }
+});
+
+window.deleteUnit = async function(id){
+  if(!canDelete()){ showToast('الحذف متاح لمسؤول النظام فقط', 'error'); return; }
+  const contract = activeContractFor(id);
+  if(contract){
+    showToast('لا يمكن حذف وحدة مرتبطة بعقد نشط. احذف العقد أولًا من شاشة العقود.', 'error');
+    return;
+  }
+  if(!confirm('هل أنت متأكد من حذف هذه الوحدة؟')) return;
+  try{
+    await API.remove('units', id);
+    showToast('تم حذف الوحدة', 'success');
+    loadUnits();
+  }catch(e){
+    showToast('فشل حذف الوحدة', 'error');
+  }
+};
+
+loadUnits();
+</script>
+</body>
+</html>

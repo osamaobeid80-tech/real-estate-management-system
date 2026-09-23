@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>التقارير | نظام إدارة العقارات</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f4c5c">
+<link rel="apple-touch-icon" href="images/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebarContainer"></div>
+  <main class="app-main">
+    <div id="topbarContainer"></div>
+
+    <div class="app-content">
+      <div class="toolbar" style="justify-content:flex-end;">
+        <button class="btn btn-outline" id="exportBtn"><i class="fa-solid fa-file-arrow-down"></i> تصدير CSV</button>
+      </div>
+
+      <div class="form-row" style="align-items:stretch;">
+        <div class="panel">
+          <div class="panel-title"><h3><i class="fa-solid fa-building"></i> إشغال الوحدات حسب الحالة</h3></div>
+          <div style="height:260px;"><canvas id="occupancyChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title"><h3><i class="fa-solid fa-layer-group"></i> توزيع الوحدات حسب النوع</h3></div>
+          <div style="height:260px;"><canvas id="typeChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title"><h3><i class="fa-solid fa-chart-column"></i> الإيرادات المسددة شهريًا</h3></div>
+        <div style="height:280px;"><canvas id="monthlyRevenueChart"></canvas></div>
+      </div>
+
+      <div class="form-row">
+        <div class="panel">
+          <div class="panel-title"><h3><i class="fa-solid fa-circle-check"></i> حالة سداد الدفعات</h3></div>
+          <div style="height:240px;"><canvas id="paymentStatusChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title"><h3><i class="fa-solid fa-ranking-star"></i> أهم المؤشرات</h3></div>
+          <div id="kpiArea" style="font-size:13.5px;line-height:2.3;"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title"><h3><i class="fa-solid fa-triangle-exclamation"></i> تقرير الدفعات المتأخرة</h3></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>المستأجر</th><th>رقم العقد</th><th>القيمة</th><th>تاريخ الاستحقاق</th><th>عدد أيام التأخير</th></tr></thead>
+            <tbody id="overdueTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="bottomNavContainer"></div>
+
+<script src="js/app.js"></script>
+<script src="js/data.js"></script>
+<script>
+renderShell('reports');
+
+let unitsCache = [], paymentsCache = [], contractsCache = [];
+
+async function loadReports(){
+  try{
+    [unitsCache, paymentsCache, contractsCache] = await Promise.all([API.listAll('units'), API.listAll('payments'), API.listAll('contracts')]);
+    renderOccupancyChart();
+    renderTypeChart();
+    renderMonthlyRevenue();
+    renderPaymentStatusChart();
+    renderKpis();
+    renderOverdue();
+  }catch(e){
+    showToast('فشل تحميل بيانات التقارير', 'error');
+    console.error(e);
+  }
+}
+
+function renderOccupancyChart(){
+  const statuses = ['مؤجرة','شاغرة','تحت الصيانة','محجوزة'];
+  const counts = statuses.map(s=>unitsCache.filter(u=>u.unit_status===s).length);
+  new Chart(document.getElementById('occupancyChart'), {
+    type:'doughnut',
+    data:{ labels: statuses, datasets:[{ data: counts, backgroundColor:['#1f9d55','#94a3b8','#e0a11c','#0f4c5c'] }] },
+    options:{ maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{family:'Cairo'}}}} }
+  });
+}
+
+function renderTypeChart(){
+  const types = [...new Set(unitsCache.map(u=>u.unit_type).filter(Boolean))];
+  const counts = types.map(t=>unitsCache.filter(u=>u.unit_type===t).length);
+  new Chart(document.getElementById('typeChart'), {
+    type:'bar',
+    data:{ labels: types, datasets:[{ label:'عدد الوحدات', data: counts, backgroundColor:'#c99a2e', borderRadius:6 }] },
+    options:{ maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1}}} }
+  });
+}
+
+function renderMonthlyRevenue(){
+  const paid = paymentsCache.filter(p=>p.status==='مدفوعة' && p.paid_date);
+  const monthTotals = {};
+  paid.forEach(p=>{
+    const d = new Date(p.paid_date);
+    if(isNaN(d.getTime())) return;
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    monthTotals[key] = (monthTotals[key]||0) + Number(p.amount||0);
+  });
+  const keys = Object.keys(monthTotals).sort();
+  new Chart(document.getElementById('monthlyRevenueChart'), {
+    type:'line',
+    data:{
+      labels: keys.length?keys:['لا توجد بيانات'],
+      datasets:[{ label:'الإيرادات (ريال)', data: keys.length?keys.map(k=>monthTotals[k]):[0], borderColor:'#0f4c5c', backgroundColor:'rgba(15,76,92,.15)', fill:true, tension:.3 }]
+    },
+    options:{ maintainAspectRatio:false, scales:{y:{beginAtZero:true}} }
+  });
+}
+
+function renderPaymentStatusChart(){
+  const statuses = ['مدفوعة','مستحقة','متأخرة','ملغاة'];
+  const counts = statuses.map(s=>paymentsCache.filter(p=>p.status===s).length);
+  new Chart(document.getElementById('paymentStatusChart'), {
+    type:'pie',
+    data:{ labels: statuses, datasets:[{ data: counts, backgroundColor:['#1f9d55','#0f4c5c','#d33b3b','#94a3b8'] }] },
+    options:{ maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{family:'Cairo'}}}} }
+  });
+}
+
+function renderKpis(){
+  const totalUnits = unitsCache.length;
+  const occupancyRate = totalUnits ? Math.round((unitsCache.filter(u=>u.unit_status==='مؤجرة').length/totalUnits)*100) : 0;
+  const totalRevenue = paymentsCache.filter(p=>p.status==='مدفوعة').reduce((s,p)=>s+Number(p.amount||0),0);
+  const activeContracts = contractsCache.filter(c=>c.contract_status==='نشط' || !c.contract_status);
+  const avgRent = activeContracts.length ? Math.round(activeContracts.reduce((s,c)=>s+Number(c.rent_value||0),0)/activeContracts.length) : 0;
+  const lateCount = paymentsCache.filter(p=>p.status==='متأخرة').length;
+
+  document.getElementById('kpiArea').innerHTML = `
+    <div style="display:flex;justify-content:space-between;border-bottom:1px dashed var(--gray-200);padding:6px 0;"><span style="color:var(--gray-600);">نسبة الإشغال</span><b style="color:var(--primary);">${occupancyRate}%</b></div>
+    <div style="display:flex;justify-content:space-between;border-bottom:1px dashed var(--gray-200);padding:6px 0;"><span style="color:var(--gray-600);">إجمالي الإيرادات المحصّلة</span><b style="color:var(--success);">${formatCurrency(totalRevenue)}</b></div>
+    <div style="display:flex;justify-content:space-between;border-bottom:1px dashed var(--gray-200);padding:6px 0;"><span style="color:var(--gray-600);">متوسط الإيجار السنوي للوحدة</span><b>${formatCurrency(avgRent)}</b></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;"><span style="color:var(--gray-600);">دفعات متأخرة حاليًا</span><b style="color:var(--danger);">${lateCount}</b></div>
+  `;
+}
+
+function renderOverdue(){
+  const overdue = paymentsCache.filter(p=>{
+    if(p.status==='متأخرة') return true;
+    if(p.status==='مستحقة'){ const d=daysUntil(p.due_date); return d!==null && d<0; }
+    return false;
+  }).map(p=>({...p,_days: Math.abs(daysUntil(p.due_date)||0)})).sort((a,b)=>b._days-a._days);
+
+  const body = document.getElementById('overdueTableBody');
+  if(overdue.length===0){
+    body.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fa-solid fa-circle-check"></i>لا توجد دفعات متأخرة حاليًا</div></td></tr>`;
+    return;
+  }
+  body.innerHTML = overdue.map(p=>`
+    <tr>
+      <td>${escapeHtml(p.tenant_name||'—')}</td>
+      <td>${escapeHtml(p.contract_number||'—')}</td>
+      <td>${formatCurrency(p.amount)}</td>
+      <td>${formatDate(p.due_date)}</td>
+      <td><span class="status-badge p-moa">${p._days} يوم</span></td>
+    </tr>
+  `).join('');
+}
+
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const rows = [['المستأجر','رقم العقد','رقم الوحدة','قيمة الدفعة','تاريخ الاستحقاق','تاريخ السداد','الحالة']];
+  paymentsCache.forEach(p=>{
+    rows.push([p.tenant_name||'', p.contract_number||'', p.unit_id||'', p.amount||0, p.due_date||'', p.paid_date||'', p.status||'']);
+  });
+  const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'تقرير_المدفوعات.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('تم تصدير التقرير بصيغة CSV', 'success');
+});
+
+loadReports();
+</script>
+</body>
+</html>
