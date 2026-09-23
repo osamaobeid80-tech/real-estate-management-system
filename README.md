@@ -194,6 +194,11 @@ docker-compose.yml      تشغيل db + backend + frontend-react معًا بأم
 
 ---
 **آخر تحديث:** تسليم أولي كامل يغطي جميع المتطلبات المذكورة في طلب المواصفات التنفيذية.
+
 ## Project URL
 
 https://github.com/osamaobeid80-tech/real-estate-management-system
+
+## Project URL
+
+https://www.genspark.ai/api/code_sandbox_light_git/preview/6e137777-81f0-4c65-ad2c-f2052f89c9a6/index.html?canvas_history_id=1f9bdf3b09d6d0bd32c9b38bce98fcef1cc87d10
